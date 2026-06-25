@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Download, Upload } from "lucide-react";
+import { Download, LogOut, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/hooks/use-auth";
 import { exportAll, importAll } from "@/lib/storage";
 
 export const Route = createFileRoute("/settings")({
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/settings")({
 });
 
 function SettingsPage() {
+  const { user, signOut } = useAuth();
   const [text, setText] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -52,7 +54,17 @@ function SettingsPage() {
   return (
     <AppShell title="Ajustes">
       <section className="mb-6 rounded-3xl border border-border/60 bg-card/80 p-5 shadow-soft backdrop-blur">
-        <h2 className="mb-1 font-display text-lg">Copia de seguridad</h2>
+        <h2 className="mb-1 font-display text-lg">Tu cuenta</h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Conectad@ como <span className="font-medium text-foreground">{user?.email}</span>
+        </p>
+        <Button variant="secondary" onClick={signOut} className="gap-2">
+          <LogOut className="h-4 w-4" /> Cerrar sesión
+        </Button>
+      </section>
+
+      <section className="mb-6 rounded-3xl border border-border/60 bg-card/80 p-5 shadow-soft backdrop-blur">
+        <h2 className="mb-1 font-display text-lg">Copia de planes y recuerdos</h2>
         <p className="mb-4 text-sm text-muted-foreground">
           Tus datos solo viven en este navegador. Exporta de vez en cuando para no perderlos.
         </p>
