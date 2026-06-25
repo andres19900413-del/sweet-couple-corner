@@ -75,6 +75,43 @@
   --sidebar-ring: oklch(0.78 0.1 350);
 }
 
+/* ===== Paletas pastel seleccionables ===== */
+.theme-blush {
+  --primary: oklch(0.74 0.13 350);
+  --ring: oklch(0.78 0.1 350);
+  --accent: oklch(0.9 0.06 25);
+  --blush: oklch(0.9 0.06 15);
+  --lavender: oklch(0.88 0.06 310);
+}
+.theme-lavender {
+  --primary: oklch(0.7 0.12 300);
+  --ring: oklch(0.78 0.1 300);
+  --accent: oklch(0.9 0.07 290);
+  --blush: oklch(0.9 0.06 320);
+  --lavender: oklch(0.88 0.08 295);
+}
+.theme-peach {
+  --primary: oklch(0.74 0.13 45);
+  --ring: oklch(0.8 0.1 45);
+  --accent: oklch(0.92 0.07 60);
+  --blush: oklch(0.92 0.06 40);
+  --lavender: oklch(0.9 0.05 25);
+}
+.theme-mint {
+  --primary: oklch(0.7 0.1 175);
+  --ring: oklch(0.78 0.08 175);
+  --accent: oklch(0.9 0.07 160);
+  --blush: oklch(0.93 0.05 160);
+  --lavender: oklch(0.9 0.06 200);
+}
+.theme-sky {
+  --primary: oklch(0.7 0.11 230);
+  --ring: oklch(0.78 0.09 230);
+  --accent: oklch(0.9 0.06 220);
+  --blush: oklch(0.93 0.05 210);
+  --lavender: oklch(0.9 0.06 250);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
