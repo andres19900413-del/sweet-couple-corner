@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { usePreferences } from "@/lib/preferences";
 import { STORAGE_KEYS, daysBetween, useLocalStorage } from "@/lib/storage";
 
 export const Route = createFileRoute("/")({
@@ -21,6 +22,7 @@ function HomePage() {
     STORAGE_KEYS.startDate,
     null,
   );
+  const { prefs } = usePreferences();
   const [draft, setDraft] = useState("");
   const [now, setNow] = useState(() => new Date());
 
@@ -71,12 +73,14 @@ function HomePage() {
           <Heart className="h-10 w-10 fill-current" />
         </div>
         <p className="mt-6 font-display text-sm uppercase tracking-[0.2em] text-muted-foreground">
-          Llevamos juntos
+          {prefs.myName && prefs.partnerName
+            ? `${prefs.myName} & ${prefs.partnerName}`
+            : "Llevamos juntos"}
         </p>
         <p className="mt-2 font-display text-7xl font-semibold text-primary">
           {days}
         </p>
-        <p className="font-display text-xl text-foreground">días 💕</p>
+        <p className="font-display text-xl text-foreground">días {prefs.emoji}</p>
         <p className="mt-3 text-sm text-muted-foreground">
           {years > 0 && `${years} año${years > 1 ? "s" : ""}, `}
           {months > 0 && `${months} mes${months > 1 ? "es" : ""}, `}
