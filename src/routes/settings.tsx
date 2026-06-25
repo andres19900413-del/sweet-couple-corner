@@ -1,17 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Download, LogOut, Upload } from "lucide-react";
+import { Check, Download, LogOut, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
-import { exportAll, importAll } from "@/lib/storage";
+import { THEMES, usePreferences } from "@/lib/preferences";
+import { STORAGE_KEYS, exportAll, importAll, useLocalStorage } from "@/lib/storage";
+
+const EMOJIS = ["💕", "💖", "💘", "💞", "❤️", "🌸", "🌷", "✨", "🦋", "🧸"];
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
       { title: "Ajustes" },
-      { name: "description", content: "Copia de seguridad de tus datos." },
+      { name: "description", content: "Personaliza tu rinconcito." },
     ],
   }),
   component: SettingsPage,
@@ -19,9 +24,16 @@ export const Route = createFileRoute("/settings")({
 
 function SettingsPage() {
   const { user, signOut } = useAuth();
+  const { prefs, update } = usePreferences();
+  const [startDate, setStartDate] = useLocalStorage<string | null>(
+    STORAGE_KEYS.startDate,
+    null,
+  );
   const [text, setText] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const startDateValue = startDate ? new Date(startDate).toISOString().slice(0, 10) : "";
 
   const doExport = () => {
     const data = exportAll();
