@@ -22,6 +22,7 @@ export type Database = {
           event_date: string
           event_time: string | null
           id: string
+          reminder_lead_minutes: number | null
           title: string
         }
         Insert: {
@@ -31,6 +32,7 @@ export type Database = {
           event_date: string
           event_time?: string | null
           id?: string
+          reminder_lead_minutes?: number | null
           title: string
         }
         Update: {
@@ -40,6 +42,7 @@ export type Database = {
           event_date?: string
           event_time?: string | null
           id?: string
+          reminder_lead_minutes?: number | null
           title?: string
         }
         Relationships: []
