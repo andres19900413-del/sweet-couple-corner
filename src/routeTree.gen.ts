@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as MoodsRouteImport } from './routes/moods'
 import { Route as MemoriesRouteImport } from './routes/memories'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -21,6 +22,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MoodsRoute = MoodsRouteImport.update({
+  id: '/moods',
+  path: '/moods',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MemoriesRoute = MemoriesRouteImport.update({
@@ -67,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/gallery': typeof GalleryRoute
   '/memories': typeof MemoriesRoute
+  '/moods': typeof MoodsRoute
   '/settings': typeof SettingsRoute
 }
 export interface FileRoutesByTo {
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/gallery': typeof GalleryRoute
   '/memories': typeof MemoriesRoute
+  '/moods': typeof MoodsRoute
   '/settings': typeof SettingsRoute
 }
 export interface FileRoutesById {
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/gallery': typeof GalleryRoute
   '/memories': typeof MemoriesRoute
+  '/moods': typeof MoodsRoute
   '/settings': typeof SettingsRoute
 }
 export interface FileRouteTypes {
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/gallery'
     | '/memories'
+    | '/moods'
     | '/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/gallery'
     | '/memories'
+    | '/moods'
     | '/settings'
   id:
     | '__root__'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/gallery'
     | '/memories'
+    | '/moods'
     | '/settings'
   fileRoutesById: FileRoutesById
 }
@@ -131,6 +143,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   GalleryRoute: typeof GalleryRoute
   MemoriesRoute: typeof MemoriesRoute
+  MoodsRoute: typeof MoodsRoute
   SettingsRoute: typeof SettingsRoute
 }
 
@@ -141,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moods': {
+      id: '/moods'
+      path: '/moods'
+      fullPath: '/moods'
+      preLoaderRoute: typeof MoodsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/memories': {
@@ -203,6 +223,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   GalleryRoute: GalleryRoute,
   MemoriesRoute: MemoriesRoute,
+  MoodsRoute: MoodsRoute,
   SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
