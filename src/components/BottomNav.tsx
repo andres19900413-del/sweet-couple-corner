@@ -1,10 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { CalendarDays, Heart, ListChecks, MessageCircleHeart, NotebookPen, Settings } from "lucide-react";
+import { CalendarDays, Heart, Images, ListChecks, MessageCircleHeart, NotebookPen, Settings } from "lucide-react";
 
 const items = [
   { to: "/", label: "Inicio", Icon: Heart },
   { to: "/chat", label: "Chat", Icon: MessageCircleHeart },
   { to: "/calendar", label: "Fechas", Icon: CalendarDays },
+  { to: "/gallery", label: "Fotos", Icon: Images },
   { to: "/bucket", label: "Planes", Icon: ListChecks },
   { to: "/memories", label: "Notas", Icon: NotebookPen },
   { to: "/settings", label: "Ajustes", Icon: Settings },
