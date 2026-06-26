@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as MemoriesRouteImport } from './routes/memories'
+import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as BucketRouteImport } from './routes/bucket'
@@ -25,6 +26,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const MemoriesRoute = MemoriesRouteImport.update({
   id: '/memories',
   path: '/memories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GalleryRoute = GalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatRoute = ChatRouteImport.update({
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/bucket': typeof BucketRoute
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
+  '/gallery': typeof GalleryRoute
   '/memories': typeof MemoriesRoute
   '/settings': typeof SettingsRoute
 }
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/bucket': typeof BucketRoute
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
+  '/gallery': typeof GalleryRoute
   '/memories': typeof MemoriesRoute
   '/settings': typeof SettingsRoute
 }
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/bucket': typeof BucketRoute
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
+  '/gallery': typeof GalleryRoute
   '/memories': typeof MemoriesRoute
   '/settings': typeof SettingsRoute
 }
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/bucket'
     | '/calendar'
     | '/chat'
+    | '/gallery'
     | '/memories'
     | '/settings'
   fileRoutesByTo: FileRoutesByTo
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/bucket'
     | '/calendar'
     | '/chat'
+    | '/gallery'
     | '/memories'
     | '/settings'
   id:
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/bucket'
     | '/calendar'
     | '/chat'
+    | '/gallery'
     | '/memories'
     | '/settings'
   fileRoutesById: FileRoutesById
@@ -117,6 +129,7 @@ export interface RootRouteChildren {
   BucketRoute: typeof BucketRoute
   CalendarRoute: typeof CalendarRoute
   ChatRoute: typeof ChatRoute
+  GalleryRoute: typeof GalleryRoute
   MemoriesRoute: typeof MemoriesRoute
   SettingsRoute: typeof SettingsRoute
 }
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/memories'
       fullPath: '/memories'
       preLoaderRoute: typeof MemoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gallery': {
+      id: '/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat': {
@@ -181,6 +201,7 @@ const rootRouteChildren: RootRouteChildren = {
   BucketRoute: BucketRoute,
   CalendarRoute: CalendarRoute,
   ChatRoute: ChatRoute,
+  GalleryRoute: GalleryRoute,
   MemoriesRoute: MemoriesRoute,
   SettingsRoute: SettingsRoute,
 }
