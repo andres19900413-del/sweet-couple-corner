@@ -74,6 +74,33 @@ export type Database = {
         }
         Relationships: []
       }
+      photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          storage_path: string
+          taken_on: string | null
+          uploader_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          storage_path: string
+          taken_on?: string | null
+          uploader_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          storage_path?: string
+          taken_on?: string | null
+          uploader_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_emoji: string | null
