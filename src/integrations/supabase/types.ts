@@ -80,6 +80,7 @@ export type Database = {
           created_at: string
           id: string
           storage_path: string
+          tagged_names: string[]
           taken_on: string | null
           uploader_id: string
         }
@@ -88,6 +89,7 @@ export type Database = {
           created_at?: string
           id?: string
           storage_path: string
+          tagged_names?: string[]
           taken_on?: string | null
           uploader_id: string
         }
@@ -96,6 +98,7 @@ export type Database = {
           created_at?: string
           id?: string
           storage_path?: string
+          tagged_names?: string[]
           taken_on?: string | null
           uploader_id?: string
         }

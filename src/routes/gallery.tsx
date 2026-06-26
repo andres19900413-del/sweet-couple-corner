@@ -1,18 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { ImagePlus, Trash2, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ImagePlus, Trash2, Loader2, Tag } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { usePreferences } from "@/lib/preferences";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/gallery")({
   head: () => ({
     meta: [
-      { title: "Galería 📸" },
-      { name: "description", content: "Nuestros recuerdos en fotos." },
+      { title: "Álbum 📸" },
+      { name: "description", content: "Nuestro álbum compartido." },
     ],
   }),
   component: GalleryPage,
@@ -24,18 +26,30 @@ type Photo = {
   storage_path: string;
   caption: string | null;
   taken_on: string | null;
+  tagged_names: string[];
   created_at: string;
   url?: string;
 };
 
 function GalleryPage() {
   const { user } = useAuth();
+  const { prefs } = usePreferences();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [caption, setCaption] = useState("");
   const [takenOn, setTakenOn] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [filter, setFilter] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const tagOptions = useMemo(
+    () => [prefs.myName, prefs.partnerName].filter((n): n is string => !!n.trim()),
+    [prefs.myName, prefs.partnerName],
+  );
+
+  const toggleTag = (name: string) =>
+    setTags((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
 
   const load = async () => {
     setLoading(true);
@@ -88,10 +102,12 @@ function GalleryPage() {
         storage_path: path,
         caption: caption.trim() || null,
         taken_on: takenOn || null,
+        tagged_names: tags,
       });
       if (insErr) throw insErr;
       setCaption("");
       setTakenOn("");
+      setTags([]);
       toast.success("Foto añadida 💕");
       await load();
     } catch (err) {
@@ -109,13 +125,17 @@ function GalleryPage() {
     setPhotos((prev) => prev.filter((x) => x.id !== p.id));
   };
 
+  const visible = filter
+    ? photos.filter((p) => p.tagged_names?.includes(filter))
+    : photos;
+
   return (
-    <AppShell title="Galería">
+    <AppShell title="Álbum">
       <p className="mb-5 text-sm text-muted-foreground">
-        Guarda y revive vuestros momentos favoritos.
+        Vuestro álbum compartido. Sube fotos y etiqueta quién aparece.
       </p>
 
-      <div className="mb-6 flex flex-col gap-2 rounded-3xl border border-border/60 bg-card/80 p-4 shadow-soft backdrop-blur">
+      <div className="mb-4 flex flex-col gap-2 rounded-3xl border border-border/60 bg-card/80 p-4 shadow-soft backdrop-blur">
         <Input
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
@@ -126,6 +146,35 @@ function GalleryPage() {
           value={takenOn}
           onChange={(e) => setTakenOn(e.target.value)}
         />
+
+        {tagOptions.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+            <span className="mr-1 text-xs text-muted-foreground">Etiquetar:</span>
+            {tagOptions.map((name) => {
+              const active = tags.includes(name);
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => toggleTag(name)}
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                    active
+                      ? "border-primary bg-primary/15 text-primary"
+                      : "border-border bg-card text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {name}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="pt-1 text-xs text-muted-foreground">
+            Configura vuestros nombres en Ajustes para poder etiquetar.
+          </p>
+        )}
+
         <input
           ref={fileRef}
           type="file"
@@ -143,17 +192,49 @@ function GalleryPage() {
         </Button>
       </div>
 
+      {tagOptions.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setFilter(null)}
+            className={cn(
+              "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+              filter === null
+                ? "border-primary bg-primary/15 text-primary"
+                : "border-border bg-card text-muted-foreground",
+            )}
+          >
+            Todas
+          </button>
+          {tagOptions.map((name) => (
+            <button
+              key={name}
+              type="button"
+              onClick={() => setFilter(name)}
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                filter === name
+                  ? "border-primary bg-primary/15 text-primary"
+                  : "border-border bg-card text-muted-foreground",
+              )}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-12 text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin" />
         </div>
-      ) : photos.length === 0 ? (
+      ) : visible.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-border bg-card/40 px-4 py-8 text-center text-sm text-muted-foreground">
-          Aún no hay fotos. Sube la primera 📷
+          {filter ? `Sin fotos etiquetadas con ${filter}.` : "Aún no hay fotos. Sube la primera 📷"}
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-3">
-          {photos.map((p) => (
+          {visible.map((p) => (
             <figure
               key={p.id}
               className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 shadow-soft"
@@ -168,22 +249,31 @@ function GalleryPage() {
               ) : (
                 <div className="aspect-square w-full bg-muted" />
               )}
-              {(p.caption || p.taken_on) && (
-                <figcaption className="space-y-0.5 px-2 py-1.5 text-[11px]">
-                  {p.taken_on && (
-                    <time className="block font-medium uppercase tracking-wider text-primary">
-                      {new Date(p.taken_on).toLocaleDateString("es-ES", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </time>
-                  )}
-                  {p.caption && (
-                    <p className="line-clamp-2 text-foreground">{p.caption}</p>
-                  )}
-                </figcaption>
-              )}
+              <figcaption className="space-y-1 px-2 py-1.5 text-[11px]">
+                {p.taken_on && (
+                  <time className="block font-medium uppercase tracking-wider text-primary">
+                    {new Date(p.taken_on).toLocaleDateString("es-ES", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </time>
+                )}
+                {p.caption && <p className="line-clamp-2 text-foreground">{p.caption}</p>}
+                {p.tagged_names?.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1 pt-0.5">
+                    <Tag className="h-2.5 w-2.5 text-muted-foreground" />
+                    {p.tagged_names.map((n) => (
+                      <span
+                        key={n}
+                        className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary"
+                      >
+                        {n}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </figcaption>
               {user?.id === p.uploader_id && (
                 <button
                   onClick={() => remove(p)}
