@@ -95,6 +95,33 @@ export type Database = {
         }
         Relationships: []
       }
+      notes: {
+        Row: {
+          author_id: string
+          author_name: string | null
+          color: string
+          content: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          author_id: string
+          author_name?: string | null
+          color?: string
+          content: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          author_id?: string
+          author_name?: string | null
+          color?: string
+          content?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       photos: {
         Row: {
           caption: string | null
