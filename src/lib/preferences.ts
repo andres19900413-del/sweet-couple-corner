@@ -10,20 +10,38 @@ export const THEMES: { key: ThemeKey; label: string; swatch: string[] }[] = [
   { key: "sky", label: "Cielo", swatch: ["#d8e6f5", "#a8c5e8", "#6b8fc4"] },
 ];
 
+export type CustomColors = {
+  primary: string;
+  accent: string;
+  blush: string;
+  lavender: string;
+};
+
 export type Preferences = {
   themeKey: ThemeKey;
   myName: string;
   partnerName: string;
   emoji: string;
+  customEnabled: boolean;
+  customColors: CustomColors;
 };
 
 const PREFS_KEY = "rincon:prefs";
+
+export const DEFAULT_CUSTOM_COLORS: CustomColors = {
+  primary: "#d48bb0",
+  accent: "#f8d7c4",
+  blush: "#fbe1ea",
+  lavender: "#e7d8f2",
+};
 
 const DEFAULT_PREFS: Preferences = {
   themeKey: "blush",
   myName: "",
   partnerName: "",
   emoji: "💕",
+  customEnabled: false,
+  customColors: DEFAULT_CUSTOM_COLORS,
 };
 
 function readPrefs(): Preferences {
@@ -37,6 +55,23 @@ function readPrefs(): Preferences {
   }
 }
 
+const CUSTOM_VARS: (keyof CustomColors)[] = ["primary", "accent", "blush", "lavender"];
+
+function applyCustomColors(colors: CustomColors | null) {
+  if (typeof document === "undefined") return;
+  const style = document.documentElement.style;
+  if (!colors) {
+    for (const k of CUSTOM_VARS) style.removeProperty(`--${k}`);
+    style.removeProperty(`--ring`);
+    return;
+  }
+  style.setProperty("--primary", colors.primary);
+  style.setProperty("--accent", colors.accent);
+  style.setProperty("--blush", colors.blush);
+  style.setProperty("--lavender", colors.lavender);
+  style.setProperty("--ring", colors.primary);
+}
+
 function applyTheme(themeKey: ThemeKey) {
   if (typeof document === "undefined") return;
   const cls = document.documentElement.classList;
@@ -46,6 +81,11 @@ function applyTheme(themeKey: ThemeKey) {
   cls.add(`theme-${themeKey}`);
 }
 
+function applyPrefs(p: Preferences) {
+  applyTheme(p.themeKey);
+  applyCustomColors(p.customEnabled ? p.customColors : null);
+}
+
 export function usePreferences() {
   const [prefs, setPrefs] = useState<Preferences>(DEFAULT_PREFS);
   const [hydrated, setHydrated] = useState(false);
@@ -53,7 +93,7 @@ export function usePreferences() {
   useEffect(() => {
     const p = readPrefs();
     setPrefs(p);
-    applyTheme(p.themeKey);
+    applyPrefs(p);
     setHydrated(true);
   }, []);
 
@@ -65,7 +105,7 @@ export function usePreferences() {
       } catch {
         /* noop */
       }
-      if (patch.themeKey) applyTheme(patch.themeKey);
+      applyPrefs(next);
       return next;
     });
   };
@@ -76,6 +116,7 @@ export function usePreferences() {
 /** Apply persisted theme on first render anywhere in the app. */
 export function useApplyTheme() {
   useEffect(() => {
-    applyTheme(readPrefs().themeKey);
+    applyPrefs(readPrefs());
   }, []);
 }
+
