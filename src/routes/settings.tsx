@@ -7,9 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
-import { DEFAULT_CUSTOM_COLORS, THEMES, usePreferences } from "@/lib/preferences";
+import { THEMES, usePreferences } from "@/lib/preferences";
 import { STORAGE_KEYS, exportAll, importAll, useLocalStorage } from "@/lib/storage";
-import { PushToggle } from "@/components/PushToggle";
 
 const EMOJIS = ["💕", "💖", "💘", "💞", "❤️", "🌸", "🌷", "✨", "🦋", "🧸"];
 
@@ -135,12 +134,6 @@ function SettingsPage() {
       </section>
 
       <section className="mb-6 rounded-3xl border border-border/60 bg-card/80 p-5 shadow-soft backdrop-blur">
-        <h2 className="mb-3 font-display text-lg">Notificaciones</h2>
-        <PushToggle />
-      </section>
-
-
-      <section className="mb-6 rounded-3xl border border-border/60 bg-card/80 p-5 shadow-soft backdrop-blur">
         <h2 className="mb-1 font-display text-lg">Paleta pastel</h2>
         <p className="mb-3 text-sm text-muted-foreground">
           Elige el tono que más os represente.
@@ -176,73 +169,66 @@ function SettingsPage() {
         </div>
       </section>
 
-      <section className="mb-6 rounded-3xl border border-border/60 bg-card/80 p-5 shadow-soft backdrop-blur">
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <div>
-            <h2 className="font-display text-lg">Colores a tu gusto</h2>
-            <p className="text-sm text-muted-foreground">
-              Activa y elige cualquier color para personalizar la app.
-            </p>
-          </div>
-          <label className="flex shrink-0 cursor-pointer items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={prefs.customEnabled}
-              onChange={(e) => update({ customEnabled: e.target.checked })}
-              className="h-4 w-4 accent-[color:var(--primary)]"
-            />
-            {prefs.customEnabled ? "On" : "Off"}
-          </label>
-        </div>
 
-        <div className={`grid grid-cols-2 gap-3 ${prefs.customEnabled ? "" : "opacity-50"}`}>
-          {(
-            [
-              { key: "primary", label: "Principal" },
-              { key: "accent", label: "Acento" },
-              { key: "blush", label: "Fondo cálido" },
-              { key: "lavender", label: "Fondo frío" },
-            ] as const
-          ).map(({ key, label }) => (
-            <label
-              key={key}
-              className="flex items-center gap-3 rounded-2xl border border-border bg-card p-2"
-            >
-              <input
-                type="color"
-                disabled={!prefs.customEnabled}
-                value={prefs.customColors[key]}
-                onChange={(e) =>
-                  update({
-                    customColors: { ...prefs.customColors, [key]: e.target.value },
-                  })
-                }
-                className="h-10 w-10 cursor-pointer rounded-lg border border-border bg-transparent"
-              />
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">{label}</span>
-                <span className="font-mono text-[10px] uppercase text-muted-foreground">
-                  {prefs.customColors[key]}
-                </span>
-              </div>
-            </label>
-          ))}
+      {/* COLORES PERSONALIZADOS */}
+      <section className="mb-6 rounded-3xl border border-border/60 bg-card/80 p-5 shadow-soft backdrop-blur">
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="font-display text-lg">Colores a tu gusto</h2>
+          <button
+            type="button"
+            onClick={() => update({ customEnabled: !prefs.customEnabled })}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${prefs.customEnabled ? "bg-primary" : "bg-muted"}`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${prefs.customEnabled ? "translate-x-6" : "translate-x-1"}`} />
+          </button>
         </div>
+        <p className="mb-4 text-sm text-muted-foreground">Activa y personaliza cada color de la app.</p>
 
         {prefs.customEnabled && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-3"
-            onClick={() => update({ customColors: DEFAULT_CUSTOM_COLORS })}
-          >
-            Restablecer colores
-          </Button>
+          <div className="grid grid-cols-1 gap-3">
+            {(
+              [
+                { key: "background", label: "🎨 Fondo de la app" },
+                { key: "card",       label: "🃏 Fondo de tarjetas" },
+                { key: "primary",    label: "💗 Color principal (botones)" },
+                { key: "accent",     label: "✨ Color de acento" },
+                { key: "foreground", label: "🖊️ Color del texto" },
+                { key: "border",     label: "📐 Color de bordes" },
+              ] as { key: keyof import("@/lib/preferences").CustomColors; label: string }[]
+            ).map(({ key, label }) => (
+              <div key={key} className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-background/60 px-4 py-3">
+                <span className="text-sm font-medium">{label}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground font-mono">{prefs.customColors[key]}</span>
+                  <label className="cursor-pointer">
+                    <span
+                      className="block h-8 w-8 rounded-full border-2 border-border shadow-sm"
+                      style={{ backgroundColor: prefs.customColors[key] }}
+                    />
+                    <input
+                      type="color"
+                      value={prefs.customColors[key]}
+                      onChange={(e) =>
+                        update({
+                          customColors: { ...prefs.customColors, [key]: e.target.value },
+                        })
+                      }
+                      className="sr-only"
+                    />
+                  </label>
+                </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => update({ customColors: { background: "#fff0f5", card: "#fff8fb", primary: "#d48bb0", accent: "#f8d7c4", foreground: "#4a1a2e", border: "#f0c0d8" } })}
+              className="text-xs text-muted-foreground underline text-left mt-1"
+            >
+              Restablecer colores
+            </button>
+          </div>
         )}
       </section>
-
-
-
 
       <section className="mb-6 rounded-3xl border border-border/60 bg-card/80 p-5 shadow-soft backdrop-blur">
         <h2 className="mb-1 font-display text-lg">Copia de planes y recuerdos</h2>
