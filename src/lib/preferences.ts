@@ -55,6 +55,23 @@ function readPrefs(): Preferences {
   }
 }
 
+const CUSTOM_VARS: (keyof CustomColors)[] = ["primary", "accent", "blush", "lavender"];
+
+function applyCustomColors(colors: CustomColors | null) {
+  if (typeof document === "undefined") return;
+  const style = document.documentElement.style;
+  if (!colors) {
+    for (const k of CUSTOM_VARS) style.removeProperty(`--${k}`);
+    style.removeProperty(`--ring`);
+    return;
+  }
+  style.setProperty("--primary", colors.primary);
+  style.setProperty("--accent", colors.accent);
+  style.setProperty("--blush", colors.blush);
+  style.setProperty("--lavender", colors.lavender);
+  style.setProperty("--ring", colors.primary);
+}
+
 function applyTheme(themeKey: ThemeKey) {
   if (typeof document === "undefined") return;
   const cls = document.documentElement.classList;
@@ -64,6 +81,11 @@ function applyTheme(themeKey: ThemeKey) {
   cls.add(`theme-${themeKey}`);
 }
 
+function applyPrefs(p: Preferences) {
+  applyTheme(p.themeKey);
+  applyCustomColors(p.customEnabled ? p.customColors : null);
+}
+
 export function usePreferences() {
   const [prefs, setPrefs] = useState<Preferences>(DEFAULT_PREFS);
   const [hydrated, setHydrated] = useState(false);
@@ -71,7 +93,7 @@ export function usePreferences() {
   useEffect(() => {
     const p = readPrefs();
     setPrefs(p);
-    applyTheme(p.themeKey);
+    applyPrefs(p);
     setHydrated(true);
   }, []);
 
@@ -83,7 +105,7 @@ export function usePreferences() {
       } catch {
         /* noop */
       }
-      if (patch.themeKey) applyTheme(patch.themeKey);
+      applyPrefs(next);
       return next;
     });
   };
@@ -94,6 +116,7 @@ export function usePreferences() {
 /** Apply persisted theme on first render anywhere in the app. */
 export function useApplyTheme() {
   useEffect(() => {
-    applyTheme(readPrefs().themeKey);
+    applyPrefs(readPrefs());
   }, []);
 }
+
