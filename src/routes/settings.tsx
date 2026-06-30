@@ -135,6 +135,12 @@ function SettingsPage() {
       </section>
 
       <section className="mb-6 rounded-3xl border border-border/60 bg-card/80 p-5 shadow-soft backdrop-blur">
+        <h2 className="mb-3 font-display text-lg">Notificaciones</h2>
+        <PushToggle />
+      </section>
+
+
+      <section className="mb-6 rounded-3xl border border-border/60 bg-card/80 p-5 shadow-soft backdrop-blur">
         <h2 className="mb-1 font-display text-lg">Paleta pastel</h2>
         <p className="mb-3 text-sm text-muted-foreground">
           Elige el tono que más os represente.
