@@ -70,7 +70,7 @@ export const Route = createFileRoute("/api/public/hooks/send-push")({
                 const res = await fetch(s.endpoint, {
                   method: message.method,
                   headers: message.headers,
-                  body: message.body,
+                  body: message.body as BodyInit,
                 });
                 if (res.status === 404 || res.status === 410) {
                   await admin.from("push_subscriptions").delete().eq("endpoint", s.endpoint);
