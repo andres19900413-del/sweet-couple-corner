@@ -10,20 +10,38 @@ export const THEMES: { key: ThemeKey; label: string; swatch: string[] }[] = [
   { key: "sky", label: "Cielo", swatch: ["#d8e6f5", "#a8c5e8", "#6b8fc4"] },
 ];
 
+export type CustomColors = {
+  primary: string;
+  accent: string;
+  blush: string;
+  lavender: string;
+};
+
 export type Preferences = {
   themeKey: ThemeKey;
   myName: string;
   partnerName: string;
   emoji: string;
+  customEnabled: boolean;
+  customColors: CustomColors;
 };
 
 const PREFS_KEY = "rincon:prefs";
+
+export const DEFAULT_CUSTOM_COLORS: CustomColors = {
+  primary: "#d48bb0",
+  accent: "#f8d7c4",
+  blush: "#fbe1ea",
+  lavender: "#e7d8f2",
+};
 
 const DEFAULT_PREFS: Preferences = {
   themeKey: "blush",
   myName: "",
   partnerName: "",
   emoji: "💕",
+  customEnabled: false,
+  customColors: DEFAULT_CUSTOM_COLORS,
 };
 
 function readPrefs(): Preferences {
