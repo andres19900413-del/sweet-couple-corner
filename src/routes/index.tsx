@@ -101,6 +101,8 @@ function HomePage() {
           </p>
         </div>
 
+        <ThinkingOfYou />
+
         <p className="mt-10 max-w-xs text-sm text-muted-foreground">
           Cada día contigo es un regalo. Sigamos sumando recuerdos. ✨
         </p>
