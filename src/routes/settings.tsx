@@ -200,8 +200,12 @@ function SettingsPage() {
             [
               { key: "primary", label: "Principal" },
               { key: "accent", label: "Acento" },
-              { key: "blush", label: "Fondo cálido" },
-              { key: "lavender", label: "Fondo frío" },
+              { key: "background", label: "Fondo" },
+              { key: "foreground", label: "Texto" },
+              { key: "card", label: "Tarjetas" },
+              { key: "border", label: "Bordes" },
+              { key: "blush", label: "Halo cálido" },
+              { key: "lavender", label: "Halo frío" },
             ] as const
           ).map(({ key, label }) => (
             <label
