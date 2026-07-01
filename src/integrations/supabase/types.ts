@@ -49,28 +49,40 @@ export type Database = {
       }
       messages: {
         Row: {
+          audio_url: string | null
           content: string | null
           created_at: string
+          expires_at: string | null
           id: string
           image_url: string | null
+          reactions: Json | null
           sender_id: string
           sticker: string | null
+          type: string | null
         }
         Insert: {
+          audio_url?: string | null
           content?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           image_url?: string | null
+          reactions?: Json | null
           sender_id: string
           sticker?: string | null
+          type?: string | null
         }
         Update: {
+          audio_url?: string | null
           content?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
           image_url?: string | null
+          reactions?: Json | null
           sender_id?: string
           sticker?: string | null
+          type?: string | null
         }
         Relationships: []
       }
