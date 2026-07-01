@@ -41,7 +41,9 @@ function GalleryPage() {
   const [takenOn, setTakenOn] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [filter, setFilter] = useState<string | null>(null);
+  const [preview, setPreview] = useState<Photo | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
 
   const tagOptions = useMemo(
     () => [prefs.myName, prefs.partnerName].filter((n): n is string => !!n.trim()),
