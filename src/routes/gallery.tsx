@@ -296,6 +296,64 @@ function GalleryPage() {
           ))}
         </div>
       )}
+
+      {preview && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setPreview(null)}
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/85 p-4 backdrop-blur-sm animate-in fade-in"
+        >
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setPreview(null);
+            }}
+            aria-label="Cerrar"
+            className="absolute right-4 top-4 rounded-full bg-white/15 px-3 py-1 text-sm text-white hover:bg-white/25"
+          >
+            ✕
+          </button>
+          {preview.url && (
+            <img
+              src={preview.url}
+              alt={preview.caption ?? "Recuerdo"}
+              onClick={(e) => e.stopPropagation()}
+              className="max-h-[80vh] max-w-full rounded-2xl object-contain shadow-2xl"
+            />
+          )}
+          {(preview.caption || preview.taken_on || preview.tagged_names?.length > 0) && (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="mt-4 max-w-md space-y-1 rounded-2xl bg-black/40 px-4 py-3 text-center text-white"
+            >
+              {preview.taken_on && (
+                <p className="text-xs uppercase tracking-widest text-white/70">
+                  {new Date(preview.taken_on).toLocaleDateString("es-ES", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </p>
+              )}
+              {preview.caption && <p className="text-sm">{preview.caption}</p>}
+              {preview.tagged_names?.length > 0 && (
+                <div className="flex flex-wrap justify-center gap-1 pt-1">
+                  {preview.tagged_names.map((n) => (
+                    <span
+                      key={n}
+                      className="rounded-full bg-white/20 px-2 py-0.5 text-[11px]"
+                    >
+                      {n}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </AppShell>
   );
 }
