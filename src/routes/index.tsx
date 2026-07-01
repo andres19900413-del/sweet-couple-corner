@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { ThinkingOfYou } from "@/components/ThinkingOfYou";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePreferences } from "@/lib/preferences";
@@ -99,6 +100,8 @@ function HomePage() {
             })}
           </p>
         </div>
+
+        <ThinkingOfYou />
 
         <p className="mt-10 max-w-xs text-sm text-muted-foreground">
           Cada día contigo es un regalo. Sigamos sumando recuerdos. ✨
