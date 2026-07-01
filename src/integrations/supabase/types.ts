@@ -215,6 +215,27 @@ export type Database = {
         }
         Relationships: []
       }
+      thoughts: {
+        Row: {
+          created_at: string
+          id: string
+          seen: boolean
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          seen?: boolean
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          seen?: boolean
+          sender_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
