@@ -242,12 +242,19 @@ function GalleryPage() {
               className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 shadow-soft"
             >
               {p.url ? (
-                <img
-                  src={p.url}
-                  alt={p.caption ?? "Recuerdo"}
-                  loading="lazy"
-                  className="aspect-square w-full object-cover"
-                />
+                <button
+                  type="button"
+                  onClick={() => setPreview(p)}
+                  className="block w-full"
+                  aria-label="Ver foto"
+                >
+                  <img
+                    src={p.url}
+                    alt={p.caption ?? "Recuerdo"}
+                    loading="lazy"
+                    className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                </button>
               ) : (
                 <div className="aspect-square w-full bg-muted" />
               )}
