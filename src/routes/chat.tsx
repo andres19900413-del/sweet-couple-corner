@@ -243,6 +243,7 @@ function ChatPage() {
   };
 
   // REACCIONES
+  const [pickerFor, setPickerFor] = useState<string | null>(null);
   const toggleReaction = async (msgId: string, emoji: string, currentReactions: Record<string, string[]> | null) => {
     if (!user) return;
     const reactions = { ...(currentReactions ?? {}) };
@@ -253,7 +254,10 @@ function ChatPage() {
     } else {
       reactions[emoji] = [...users, user.id];
     }
-    await supabase.from("messages").update({ reactions }).eq("id", msgId);
+    setPickerFor(null);
+    setMessages(prev => prev.map(m => m.id === msgId ? { ...m, reactions } : m));
+    const { error } = await supabase.from("messages").update({ reactions }).eq("id", msgId);
+    if (error) toast.error("No se pudo reaccionar 😔");
   };
 
   const remove = async (id: string) => {
@@ -295,7 +299,11 @@ function ChatPage() {
 
           return (
             <div key={m.id} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
-              <div className={`group relative max-w-[78%] rounded-2xl px-3 py-2 shadow-soft ${mine ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm bg-card/90 text-foreground"}`}>
+              <div
+                onDoubleClick={() => setPickerFor(pickerFor === m.id ? null : m.id)}
+                onContextMenu={(e) => { e.preventDefault(); setPickerFor(pickerFor === m.id ? null : m.id); }}
+                className={`group relative max-w-[78%] rounded-2xl px-3 py-2 shadow-soft ${mine ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm bg-card/90 text-foreground"}`}
+              >
                 {/* Autodestrucción badge */}
                 {expiresIn !== null && (
                   <div className="text-[10px] opacity-70 flex items-center gap-1 mb-1">
@@ -318,8 +326,16 @@ function ChatPage() {
                   <p className="whitespace-pre-wrap break-words text-sm">{m.content}</p>
                 )}
 
-                <div className={`mt-1 text-[10px] ${mine ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                  {new Date(m.created_at).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}
+                <div className={`mt-1 flex items-center gap-2 text-[10px] ${mine ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                  <span>{new Date(m.created_at).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span>
+                  <button
+                    type="button"
+                    onClick={() => setPickerFor(pickerFor === m.id ? null : m.id)}
+                    aria-label="Reaccionar"
+                    className={`ml-auto rounded-full px-1.5 py-0.5 transition-opacity ${mine ? "hover:bg-white/15" : "hover:bg-foreground/10"}`}
+                  >
+                    <Smile className="h-3 w-3" />
+                  </button>
                 </div>
 
                 {/* Botón eliminar (solo propios) */}
@@ -330,15 +346,17 @@ function ChatPage() {
                   </button>
                 )}
 
-                {/* Picker de reacciones al hacer hover */}
-                <div className={`absolute ${mine ? "left-0 -translate-x-full" : "right-0 translate-x-full"} top-0 hidden group-hover:flex gap-0.5 bg-card border border-border rounded-full px-1 py-0.5 shadow-md z-10`}>
-                  {REACTION_EMOJIS.map(emoji => (
-                    <button key={emoji} onClick={() => toggleReaction(m.id, emoji, m.reactions)}
-                      className="text-base hover:scale-125 transition-transform px-0.5">
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
+                {/* Picker de reacciones */}
+                {pickerFor === m.id && (
+                  <div className={`absolute ${mine ? "right-0" : "left-0"} -top-10 flex gap-0.5 bg-card border border-border rounded-full px-1.5 py-1 shadow-lg z-20 animate-in fade-in zoom-in-95`}>
+                    {REACTION_EMOJIS.map(emoji => (
+                      <button key={emoji} onClick={() => toggleReaction(m.id, emoji, m.reactions)}
+                        className="text-lg hover:scale-125 transition-transform px-1">
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Reacciones */}
