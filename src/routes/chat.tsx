@@ -243,6 +243,7 @@ function ChatPage() {
   };
 
   // REACCIONES
+  const [pickerFor, setPickerFor] = useState<string | null>(null);
   const toggleReaction = async (msgId: string, emoji: string, currentReactions: Record<string, string[]> | null) => {
     if (!user) return;
     const reactions = { ...(currentReactions ?? {}) };
@@ -253,7 +254,10 @@ function ChatPage() {
     } else {
       reactions[emoji] = [...users, user.id];
     }
-    await supabase.from("messages").update({ reactions }).eq("id", msgId);
+    setPickerFor(null);
+    setMessages(prev => prev.map(m => m.id === msgId ? { ...m, reactions } : m));
+    const { error } = await supabase.from("messages").update({ reactions }).eq("id", msgId);
+    if (error) toast.error("No se pudo reaccionar 😔");
   };
 
   const remove = async (id: string) => {
