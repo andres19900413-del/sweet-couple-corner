@@ -473,6 +473,3 @@ function Lightbox({
     </div>
   );
 }
-    </AppShell>
-  );
-}
