@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ImagePlus, Trash2, Loader2, Tag } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ImagePlus, Trash2, Loader2, Tag, ChevronLeft, ChevronRight } from "lucide-react";
+import useEmblaCarousel from "embla-carousel-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -298,62 +299,177 @@ function GalleryPage() {
       )}
 
       {preview && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setPreview(null)}
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/85 p-4 backdrop-blur-sm animate-in fade-in"
-        >
+        <Lightbox
+          photos={visible}
+          startId={preview.id}
+          onClose={() => setPreview(null)}
+        />
+      )}
+    </AppShell>
+  );
+}
+
+function Lightbox({
+  photos,
+  startId,
+  onClose,
+}: {
+  photos: Photo[];
+  startId: string;
+  onClose: () => void;
+}) {
+  const startIndex = Math.max(
+    0,
+    photos.findIndex((p) => p.id === startId),
+  );
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    startIndex,
+    loop: photos.length > 1,
+    align: "center",
+  });
+  const [index, setIndex] = useState(startIndex);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(false);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setIndex(emblaApi.selectedScrollSnap());
+    setCanPrev(emblaApi.canScrollPrev());
+    setCanNext(emblaApi.canScrollNext());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
+    return () => {
+      emblaApi.off("select", onSelect);
+      emblaApi.off("reInit", onSelect);
+    };
+  }, [emblaApi, onSelect]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") emblaApi?.scrollPrev();
+      if (e.key === "ArrowRight") emblaApi?.scrollNext();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [emblaApi, onClose]);
+
+  const current = photos[index];
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex flex-col bg-black/90 backdrop-blur-sm animate-in fade-in"
+    >
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        aria-label="Cerrar"
+        className="absolute right-4 top-4 z-10 rounded-full bg-white/15 px-3 py-1 text-sm text-white hover:bg-white/25"
+      >
+        ✕
+      </button>
+
+      {photos.length > 1 && (
+        <div className="absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-full bg-white/15 px-3 py-1 text-xs text-white">
+          {index + 1} / {photos.length}
+        </div>
+      )}
+
+      <div
+        className="flex-1 overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div ref={emblaRef} className="h-full overflow-hidden">
+          <div className="flex h-full">
+            {photos.map((p) => (
+              <div
+                key={p.id}
+                className="flex h-full min-w-0 shrink-0 grow-0 basis-full items-center justify-center p-4"
+              >
+                {p.url && (
+                  <img
+                    src={p.url}
+                    alt={p.caption ?? "Recuerdo"}
+                    className="max-h-full max-w-full rounded-2xl object-contain shadow-2xl"
+                    draggable={false}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {photos.length > 1 && (
+        <>
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              setPreview(null);
+              emblaApi?.scrollPrev();
             }}
-            aria-label="Cerrar"
-            className="absolute right-4 top-4 rounded-full bg-white/15 px-3 py-1 text-sm text-white hover:bg-white/25"
+            disabled={!canPrev}
+            aria-label="Anterior"
+            className="absolute left-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/15 p-2 text-white transition hover:bg-white/25 disabled:opacity-30 sm:left-4"
           >
-            ✕
+            <ChevronLeft className="h-6 w-6" />
           </button>
-          {preview.url && (
-            <img
-              src={preview.url}
-              alt={preview.caption ?? "Recuerdo"}
-              onClick={(e) => e.stopPropagation()}
-              className="max-h-[80vh] max-w-full rounded-2xl object-contain shadow-2xl"
-            />
-          )}
-          {(preview.caption || preview.taken_on || preview.tagged_names?.length > 0) && (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="mt-4 max-w-md space-y-1 rounded-2xl bg-black/40 px-4 py-3 text-center text-white"
-            >
-              {preview.taken_on && (
-                <p className="text-xs uppercase tracking-widest text-white/70">
-                  {new Date(preview.taken_on).toLocaleDateString("es-ES", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </p>
-              )}
-              {preview.caption && <p className="text-sm">{preview.caption}</p>}
-              {preview.tagged_names?.length > 0 && (
-                <div className="flex flex-wrap justify-center gap-1 pt-1">
-                  {preview.tagged_names.map((n) => (
-                    <span
-                      key={n}
-                      className="rounded-full bg-white/20 px-2 py-0.5 text-[11px]"
-                    >
-                      {n}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              emblaApi?.scrollNext();
+            }}
+            disabled={!canNext}
+            aria-label="Siguiente"
+            className="absolute right-2 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/15 p-2 text-white transition hover:bg-white/25 disabled:opacity-30 sm:right-4"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+        </>
       )}
-    </AppShell>
+
+      {current &&
+        (current.caption || current.taken_on || current.tagged_names?.length > 0) && (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="mx-auto mb-6 max-w-md space-y-1 rounded-2xl bg-black/40 px-4 py-3 text-center text-white"
+          >
+            {current.taken_on && (
+              <p className="text-xs uppercase tracking-widest text-white/70">
+                {new Date(current.taken_on).toLocaleDateString("es-ES", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+            )}
+            {current.caption && <p className="text-sm">{current.caption}</p>}
+            {current.tagged_names?.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-1 pt-1">
+                {current.tagged_names.map((n) => (
+                  <span
+                    key={n}
+                    className="rounded-full bg-white/20 px-2 py-0.5 text-[11px]"
+                  >
+                    {n}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+    </div>
   );
 }
