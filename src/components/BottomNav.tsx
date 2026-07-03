@@ -1,23 +1,19 @@
 import { Link } from "@tanstack/react-router";
-import { CalendarDays, Heart, Images, ListChecks, MessageCircleHeart, NotebookPen, Settings, Smile } from "lucide-react";
+import { Heart, Images, MessageCircleHeart, Smile } from "lucide-react";
 import { useNotifications } from "@/hooks/use-notifications";
 
 const items = [
   { to: "/", label: "Inicio", Icon: Heart, badge: null },
-  { to: "/chat", label: "Chat", Icon: MessageCircleHeart, badge: "chat" as const },
   { to: "/moods", label: "Ánimo", Icon: Smile, badge: null },
-  { to: "/calendar", label: "Fechas", Icon: CalendarDays, badge: null },
+  { to: "/chat", label: "Chat", Icon: MessageCircleHeart, badge: "chat" as const },
   { to: "/gallery", label: "Fotos", Icon: Images, badge: null },
-  { to: "/bucket", label: "Planes", Icon: ListChecks, badge: null },
-  { to: "/memories", label: "Notas", Icon: NotebookPen, badge: "memories" as const },
-  { to: "/settings", label: "Ajustes", Icon: Settings, badge: null },
 ] as const;
 
 export function BottomNav() {
   const { unread } = useNotifications();
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-card/80 backdrop-blur-lg">
-      <ul className="mx-auto flex max-w-md items-stretch justify-around px-1 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-2">
+      <ul className="mx-auto flex max-w-md items-stretch justify-around px-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-2">
         {items.map(({ to, label, Icon, badge }) => {
           const count = badge ? unread[badge] : 0;
           return (
@@ -25,7 +21,7 @@ export function BottomNav() {
               <Link
                 to={to}
                 activeOptions={{ exact: to === "/" }}
-                className="flex flex-col items-center gap-0.5 rounded-2xl px-1 py-1 text-[10px] font-medium text-muted-foreground transition-colors"
+                className="flex flex-col items-center gap-0.5 rounded-2xl px-1 py-1 text-[11px] font-medium text-muted-foreground transition-colors"
                 activeProps={{ className: "text-primary" }}
               >
                 <span className="relative">
