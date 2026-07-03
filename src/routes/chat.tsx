@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Image as ImageIcon, Mic, MicOff, Phone, Send, Smile, Timer, Trash2, Video } from "lucide-react";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { Image as ImageIcon, Mic, MicOff, Phone, Reply, Send, Smile, Timer, Trash2, Video, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ type Msg = {
   type: string | null;
   expires_at: string | null;
   reactions: Record<string, string[]> | null;
+  reply_to_id: string | null;
   created_at: string;
 };
 
@@ -82,6 +83,15 @@ function AudioPlayer({ src }: { src: string }) {
   );
 }
 
+function messagePreview(m: Msg | undefined): string {
+  if (!m) return "Mensaje";
+  if (m.content) return m.content;
+  if (m.sticker) return m.sticker;
+  if (m.image_url) return "📸 Foto";
+  if (m.audio_url) return "🎙 Audio";
+  return "Mensaje";
+}
+
 function ChatPage() {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -93,14 +103,22 @@ function ChatPage() {
   const [recordSecs, setRecordSecs] = useState(0);
   const [selfDestruct, setSelfDestruct] = useState<number | null>(null);
   const [showDestructMenu, setShowDestructMenu] = useState(false);
-  const [inCall, setInCall] = useState(false);
+  const [replyTo, setReplyTo] = useState<Msg | null>(null);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const msgRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const inputRef = useRef<HTMLInputElement>(null);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
   const recordTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Limpiar mensajes expirados
+  const msgById = useMemo(() => {
+    const map: Record<string, Msg> = {};
+    for (const m of messages) map[m.id] = m;
+    return map;
+  }, [messages]);
+
   const cleanExpired = useCallback(() => {
     setMessages(prev => prev.filter(m => {
       if (!m.expires_at) return true;
@@ -139,7 +157,6 @@ function ChatPage() {
     return () => { mounted = false; supabase.removeChannel(channel); };
   }, []);
 
-  // Signed URLs para imágenes
   useEffect(() => {
     const need = messages.filter((m) => m.image_url && !imgUrls[m.image_url]).map((m) => m.image_url!) as string[];
     if (!need.length) return;
@@ -149,7 +166,6 @@ function ChatPage() {
     })).then((entries) => setImgUrls(prev => { const next = { ...prev }; for (const [p, u] of entries) next[p] = u; return next; }));
   }, [messages, imgUrls]);
 
-  // Signed URLs para audios
   useEffect(() => {
     const need = messages.filter((m) => m.audio_url && !audioUrls[m.audio_url]).map((m) => m.audio_url!) as string[];
     if (!need.length) return;
@@ -173,9 +189,11 @@ function ChatPage() {
       type: payload.type ?? "text",
       expires_at,
       reactions: {},
+      reply_to_id: replyTo?.id ?? null,
     });
     if (error) toast.error(error.message);
     setSelfDestruct(null);
+    setReplyTo(null);
   };
 
   const onSend = async () => {
@@ -204,7 +222,6 @@ function ChatPage() {
     }
   };
 
-  // GRABAR AUDIO
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -220,7 +237,7 @@ function ChatPage() {
           const { error } = await supabase.storage.from("chat-media").upload(path, blob, { contentType: "audio/webm" });
           if (error) throw error;
           await send({ audio_url: path, type: "audio" });
-        } catch (err) {
+        } catch {
           toast.error("Error enviando audio");
         } finally {
           setBusy(false);
@@ -242,7 +259,6 @@ function ChatPage() {
     if (recordTimer.current) clearInterval(recordTimer.current);
   };
 
-  // REACCIONES
   const [pickerFor, setPickerFor] = useState<string | null>(null);
   const toggleReaction = async (msgId: string, emoji: string, currentReactions: Record<string, string[]> | null) => {
     if (!user) return;
@@ -265,7 +281,20 @@ function ChatPage() {
     if (error) toast.error(error.message);
   };
 
-  // VIDEOLLAMADA - abre una sala de Whereby gratuita
+  const startReply = (m: Msg) => {
+    setReplyTo(m);
+    setPickerFor(null);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  const scrollToMsg = (id: string) => {
+    const el = msgRefs.current[id];
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightId(id);
+    setTimeout(() => setHighlightId(null), 1500);
+  };
+
   const startCall = (video: boolean) => {
     const roomName = `amor-${[user?.id].sort().join("-")}`;
     const url = `https://whereby.com/${roomName}?${video ? "" : "skipMediaPermissionPrompt&audioOnly=1"}`;
@@ -275,7 +304,6 @@ function ChatPage() {
 
   return (
     <AppShell title="Chat">
-      {/* Barra de llamadas */}
       <div className="flex gap-2 mb-3 px-1">
         <Button size="sm" variant="outline" onClick={() => startCall(false)} className="flex-1 gap-1.5 text-xs">
           <Phone className="h-3.5 w-3.5" /> Llamada de voz
@@ -296,15 +324,33 @@ function ChatPage() {
           const allReactions = m.reactions ?? {};
           const hasReactions = Object.keys(allReactions).some(k => allReactions[k].length > 0);
           const expiresIn = m.expires_at ? Math.max(0, Math.floor((new Date(m.expires_at).getTime() - Date.now()) / 1000)) : null;
+          const parent = m.reply_to_id ? msgById[m.reply_to_id] : undefined;
 
           return (
-            <div key={m.id} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
+            <div key={m.id} ref={(el) => { msgRefs.current[m.id] = el; }} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
               <div
                 onDoubleClick={() => setPickerFor(pickerFor === m.id ? null : m.id)}
                 onContextMenu={(e) => { e.preventDefault(); setPickerFor(pickerFor === m.id ? null : m.id); }}
-                className={`group relative max-w-[78%] rounded-2xl px-3 py-2 shadow-soft ${mine ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm bg-card/90 text-foreground"}`}
+                className={`group relative max-w-[78%] rounded-2xl px-3 py-2 shadow-soft transition-all ${mine ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm bg-card/90 text-foreground"} ${highlightId === m.id ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""}`}
               >
-                {/* Autodestrucción badge */}
+                {parent && (
+                  <button
+                    type="button"
+                    onClick={() => scrollToMsg(parent.id)}
+                    className={`mb-1.5 flex w-full items-stretch gap-2 rounded-lg px-2 py-1 text-left text-xs ${mine ? "bg-white/15" : "bg-foreground/5"}`}
+                  >
+                    <span className={`w-0.5 rounded-full ${mine ? "bg-white/70" : "bg-primary"}`} />
+                    <span className="min-w-0 flex-1">
+                      <span className={`block font-semibold ${mine ? "text-white/90" : "text-primary"}`}>
+                        {parent.sender_id === user?.id ? "Tú" : "Osit@"}
+                      </span>
+                      <span className={`block truncate ${mine ? "text-white/80" : "text-muted-foreground"}`}>
+                        {messagePreview(parent)}
+                      </span>
+                    </span>
+                  </button>
+                )}
+
                 {expiresIn !== null && (
                   <div className="text-[10px] opacity-70 flex items-center gap-1 mb-1">
                     <Timer className="h-3 w-3" />
@@ -330,15 +376,22 @@ function ChatPage() {
                   <span>{new Date(m.created_at).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</span>
                   <button
                     type="button"
+                    onClick={() => startReply(m)}
+                    aria-label="Responder"
+                    className={`ml-auto rounded-full px-1.5 py-0.5 transition-opacity ${mine ? "hover:bg-white/15" : "hover:bg-foreground/10"}`}
+                  >
+                    <Reply className="h-3 w-3" />
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setPickerFor(pickerFor === m.id ? null : m.id)}
                     aria-label="Reaccionar"
-                    className={`ml-auto rounded-full px-1.5 py-0.5 transition-opacity ${mine ? "hover:bg-white/15" : "hover:bg-foreground/10"}`}
+                    className={`rounded-full px-1.5 py-0.5 transition-opacity ${mine ? "hover:bg-white/15" : "hover:bg-foreground/10"}`}
                   >
                     <Smile className="h-3 w-3" />
                   </button>
                 </div>
 
-                {/* Botón eliminar (solo propios) */}
                 {mine && (
                   <button onClick={() => remove(m.id)} aria-label="Borrar"
                     className="absolute -left-7 top-1/2 hidden -translate-y-1/2 text-muted-foreground hover:text-destructive group-hover:block">
@@ -346,7 +399,6 @@ function ChatPage() {
                   </button>
                 )}
 
-                {/* Picker de reacciones */}
                 {pickerFor === m.id && (
                   <div className={`absolute ${mine ? "right-0" : "left-0"} -top-10 flex gap-0.5 bg-card border border-border rounded-full px-1.5 py-1 shadow-lg z-20 animate-in fade-in zoom-in-95`}>
                     {REACTION_EMOJIS.map(emoji => (
@@ -355,11 +407,13 @@ function ChatPage() {
                         {emoji}
                       </button>
                     ))}
+                    <button onClick={() => startReply(m)} className="text-base px-1.5 hover:scale-110 transition-transform" aria-label="Responder">
+                      <Reply className="h-4 w-4" />
+                    </button>
                   </div>
                 )}
               </div>
 
-              {/* Reacciones */}
               {hasReactions && (
                 <div className="flex gap-1 mt-1 flex-wrap">
                   {Object.entries(allReactions).filter(([, users]) => users.length > 0).map(([emoji, users]) => (
@@ -376,9 +430,24 @@ function ChatPage() {
         <div ref={endRef} />
       </div>
 
-      {/* INPUT AREA */}
       <div className="fixed bottom-16 left-0 right-0 z-30 border-t border-border/60 bg-card/90 backdrop-blur-lg">
-        {/* Autodestrucción selector */}
+        {replyTo && (
+          <div className="mx-auto flex max-w-md items-stretch gap-2 px-3 pt-2">
+            <div className="flex flex-1 items-stretch gap-2 rounded-lg bg-primary/10 px-2 py-1.5">
+              <div className="w-0.5 rounded-full bg-primary" />
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-semibold text-primary flex items-center gap-1">
+                  <Reply className="h-3 w-3" /> Respondiendo a {replyTo.sender_id === user?.id ? "ti" : "osit@"}
+                </div>
+                <div className="truncate text-xs text-muted-foreground">{messagePreview(replyTo)}</div>
+              </div>
+              <button onClick={() => setReplyTo(null)} aria-label="Cancelar respuesta" className="text-muted-foreground hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {showDestructMenu && (
           <div className="flex gap-2 px-3 pt-2 flex-wrap">
             <button onClick={() => { setSelfDestruct(null); setShowDestructMenu(false); }}
@@ -395,7 +464,6 @@ function ChatPage() {
         )}
 
         <div className="mx-auto flex max-w-md items-center gap-2 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-          {/* Stickers */}
           <Popover>
             <PopoverTrigger asChild>
               <Button size="icon" variant="ghost" aria-label="Stickers"><Smile className="h-5 w-5" /></Button>
@@ -409,20 +477,17 @@ function ChatPage() {
             </PopoverContent>
           </Popover>
 
-          {/* Foto */}
           <Button size="icon" variant="ghost" onClick={() => fileRef.current?.click()} disabled={busy} aria-label="Foto">
             <ImageIcon className="h-5 w-5" />
           </Button>
           <input ref={fileRef} type="file" accept="image/*" className="hidden"
             onChange={(e) => e.target.files?.[0] && onPickFile(e.target.files[0])} />
 
-          {/* Autodestrucción */}
           <Button size="icon" variant={selfDestruct ? "default" : "ghost"}
             onClick={() => setShowDestructMenu(v => !v)} aria-label="Autodestrucción">
             <Timer className="h-5 w-5" />
           </Button>
 
-          {/* Texto o grabando */}
           {recording ? (
             <div className="flex-1 flex items-center gap-2 bg-destructive/10 rounded-lg px-3 py-1.5">
               <span className="animate-pulse text-red-500">●</span>
@@ -430,13 +495,12 @@ function ChatPage() {
               <span className="text-xs text-muted-foreground">Grabando...</span>
             </div>
           ) : (
-            <Input value={text} onChange={(e) => setText(e.target.value)}
+            <Input ref={inputRef} value={text} onChange={(e) => setText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && onSend()}
-              placeholder={selfDestruct ? `⏱ Se borrará en ${SELF_DESTRUCT_OPTIONS.find(o => o.seconds === selfDestruct)?.label}` : "Escríbele algo bonito…"}
+              placeholder={replyTo ? "Escribe tu respuesta…" : selfDestruct ? `⏱ Se borrará en ${SELF_DESTRUCT_OPTIONS.find(o => o.seconds === selfDestruct)?.label}` : "Escríbele algo bonito…"}
               className="flex-1" />
           )}
 
-          {/* Micrófono / Enviar */}
           {text.trim() ? (
             <Button size="icon" onClick={onSend} aria-label="Enviar"><Send className="h-4 w-4" /></Button>
           ) : (
