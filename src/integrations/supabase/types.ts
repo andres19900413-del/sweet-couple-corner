@@ -56,6 +56,7 @@ export type Database = {
           id: string
           image_url: string | null
           reactions: Json | null
+          reply_to_id: string | null
           sender_id: string
           sticker: string | null
           type: string | null
@@ -68,6 +69,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           reactions?: Json | null
+          reply_to_id?: string | null
           sender_id: string
           sticker?: string | null
           type?: string | null
@@ -80,11 +82,20 @@ export type Database = {
           id?: string
           image_url?: string | null
           reactions?: Json | null
+          reply_to_id?: string | null
           sender_id?: string
           sticker?: string | null
           type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       moods: {
         Row: {
