@@ -62,30 +62,33 @@ export function MenuDrawer() {
           aria-label="Ir a mi perfil"
         >
           <div
-            className="relative h-32 w-full bg-gradient-to-br from-primary/50 to-accent/50 bg-cover bg-center"
+            className="relative h-44 w-full bg-gradient-to-br from-primary/50 to-accent/50 bg-cover bg-center"
             style={bannerSrc ? { backgroundImage: `url(${bannerSrc})` } : undefined}
           >
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
             <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur">
               Editar <ChevronRight className="h-3 w-3" />
             </span>
-          </div>
-          <div className="-mt-10 flex flex-col items-center px-4 pb-4">
-            <div className="h-20 w-20 overflow-hidden rounded-full border-4 border-card bg-muted shadow-lg">
-              {avatarSrc ? (
-                <img src={avatarSrc} alt={name} className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-2xl">
-                  {profile?.avatar_emoji || "🧸"}
-                </div>
-              )}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <div className="h-20 w-20 overflow-hidden rounded-full border-4 border-card bg-muted shadow-lg">
+                {avatarSrc ? (
+                  <img src={avatarSrc} alt={name} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-2xl">
+                    {profile?.avatar_emoji || "🧸"}
+                  </div>
+                )}
+              </div>
             </div>
-            <p className="mt-2 font-display text-base text-foreground group-hover:text-primary">
+          </div>
+          <div className="flex flex-col items-center px-4 pb-4 pt-3">
+            <p className="font-display text-base text-foreground group-hover:text-primary">
               {name}
             </p>
             <p className="text-[11px] text-muted-foreground">Ver mi perfil</p>
           </div>
         </Link>
+
 
         <nav className="border-t border-border/60 p-3">
           <ul className="flex flex-col gap-1">
