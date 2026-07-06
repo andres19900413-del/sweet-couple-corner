@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImageCropper } from "@/components/ImageCropper";
 import { useAuth } from "@/hooks/use-auth";
 import { useProfile } from "@/hooks/use-profile";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,12 +21,11 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
 });
 
-async function uploadTo(userId: string, file: File, kind: "avatar" | "banner") {
-  const ext = file.name.split(".").pop() || "jpg";
-  const path = `${userId}/${kind}-${crypto.randomUUID()}.${ext}`;
+async function uploadBlob(userId: string, blob: Blob, kind: "avatar" | "banner") {
+  const path = `${userId}/${kind}-${crypto.randomUUID()}.jpg`;
   const { error } = await supabase.storage
     .from("profiles")
-    .upload(path, file, { contentType: file.type, upsert: true });
+    .upload(path, blob, { contentType: "image/jpeg", upsert: true });
   if (error) throw error;
   return path;
 }
@@ -38,44 +38,40 @@ function ProfilePage() {
   const [pw1, setPw1] = useState("");
   const [pw2, setPw2] = useState("");
   const [savingPw, setSavingPw] = useState(false);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropKind, setCropKind] = useState<"avatar" | "banner" | null>(null);
   const avatarRef = useRef<HTMLInputElement>(null);
   const bannerRef = useRef<HTMLInputElement>(null);
 
   const displayName = name || profile?.display_name || "";
 
-  const onAvatar = async (f: File) => {
-    if (!user) return;
+  const pickFile = (f: File, kind: "avatar" | "banner") => {
     if (!f.type.startsWith("image/")) return toast.error("Solo imágenes 🥲");
-    setUploadingAvatar(true);
-    try {
-      const path = await uploadTo(user.id, f, "avatar");
-      const { error } = await supabase.from("profiles").update({ avatar_url: path }).eq("id", user.id);
-      if (error) throw error;
-      toast.success("Foto de perfil actualizada 💕");
-      await reload();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "No se pudo subir");
-    } finally {
-      setUploadingAvatar(false);
-    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropSrc(reader.result as string);
+      setCropKind(kind);
+    };
+    reader.readAsDataURL(f);
   };
 
-  const onBanner = async (f: File) => {
-    if (!user) return;
-    if (!f.type.startsWith("image/")) return toast.error("Solo imágenes 🥲");
-    setUploadingBanner(true);
+  const handleCropConfirm = async (blob: Blob) => {
+    if (!user || !cropKind) return;
+    setSaving(true);
     try {
-      const path = await uploadTo(user.id, f, "banner");
-      const { error } = await supabase.from("profiles").update({ banner_url: path }).eq("id", user.id);
+      const path = await uploadBlob(user.id, blob, cropKind);
+      const field = cropKind === "avatar" ? "avatar_url" : "banner_url";
+      const { error } = await supabase.from("profiles").update({ [field]: path }).eq("id", user.id);
       if (error) throw error;
-      toast.success("Banner actualizado ✨");
+      toast.success(cropKind === "avatar" ? "Foto actualizada 💕" : "Banner actualizado ✨");
+      setCropSrc(null);
+      setCropKind(null);
       await reload();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No se pudo subir");
     } finally {
-      setUploadingBanner(false);
+      setSaving(false);
     }
   };
 
@@ -106,7 +102,7 @@ function ProfilePage() {
     <AppShell title="Mi perfil">
       <section className="mb-6 overflow-hidden rounded-3xl border border-border/60 bg-card/80 shadow-soft backdrop-blur">
         <div
-          className="relative h-36 w-full bg-gradient-to-br from-primary/40 to-accent/40 bg-cover bg-center"
+          className="relative h-48 w-full bg-gradient-to-br from-primary/40 to-accent/40 bg-cover bg-center"
           style={bannerSrc ? { backgroundImage: `url(${bannerSrc})` } : undefined}
         >
           <button
@@ -114,7 +110,7 @@ function ProfilePage() {
             onClick={() => bannerRef.current?.click()}
             className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-black/45 px-3 py-1.5 text-xs font-medium text-white backdrop-blur transition active:scale-95"
           >
-            {uploadingBanner ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImagePlus className="h-3.5 w-3.5" />}
+            <ImagePlus className="h-3.5 w-3.5" />
             Cambiar banner
           </button>
           <input
@@ -122,37 +118,47 @@ function ProfilePage() {
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={(e) => e.target.files?.[0] && onBanner(e.target.files[0])}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) pickFile(f, "banner");
+              e.target.value = "";
+            }}
           />
-        </div>
-        <div className="-mt-12 flex flex-col items-center px-5 pb-5">
-          <div className="relative">
-            <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-card bg-muted shadow-lg">
-              {avatarSrc ? (
-                <img src={avatarSrc} alt="Perfil" className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-3xl">
-                  {profile?.avatar_emoji || "🧸"}
-                </div>
-              )}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div className="relative">
+              <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-card bg-muted shadow-lg">
+                {avatarSrc ? (
+                  <img src={avatarSrc} alt="Perfil" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-3xl">
+                    {profile?.avatar_emoji || "🧸"}
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => avatarRef.current?.click()}
+                className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md ring-2 ring-card transition active:scale-95"
+                aria-label="Cambiar foto"
+              >
+                <Camera className="h-4 w-4" />
+              </button>
+              <input
+                ref={avatarRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) pickFile(f, "avatar");
+                  e.target.value = "";
+                }}
+              />
             </div>
-            <button
-              type="button"
-              onClick={() => avatarRef.current?.click()}
-              className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md ring-2 ring-card transition active:scale-95"
-              aria-label="Cambiar foto"
-            >
-              {uploadingAvatar ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-            </button>
-            <input
-              ref={avatarRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => e.target.files?.[0] && onAvatar(e.target.files[0])}
-            />
           </div>
-          <p className="mt-3 font-display text-xl">{profile?.display_name || "Sin nombre"}</p>
+        </div>
+        <div className="flex flex-col items-center px-5 pb-5 pt-4">
+          <p className="font-display text-xl">{profile?.display_name || "Sin nombre"}</p>
           <p className="text-xs text-muted-foreground">{user?.email}</p>
         </div>
       </section>
@@ -192,6 +198,22 @@ function ProfilePage() {
           </Button>
         </div>
       </section>
+
+      <ImageCropper
+        open={!!cropSrc}
+        onOpenChange={(v) => {
+          if (!v) {
+            setCropSrc(null);
+            setCropKind(null);
+          }
+        }}
+        src={cropSrc}
+        aspect={cropKind === "banner" ? 16 / 9 : 1}
+        cropShape={cropKind === "avatar" ? "round" : "rect"}
+        title={cropKind === "avatar" ? "Ajusta tu foto" : "Ajusta el banner"}
+        saving={saving}
+        onConfirm={handleCropConfirm}
+      />
     </AppShell>
   );
 }
