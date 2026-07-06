@@ -61,8 +61,8 @@ function ProfilePage() {
     setSaving(true);
     try {
       const path = await uploadBlob(user.id, blob, cropKind);
-      const field = cropKind === "avatar" ? "avatar_url" : "banner_url";
-      const { error } = await supabase.from("profiles").update({ [field]: path }).eq("id", user.id);
+      const patch = cropKind === "avatar" ? { avatar_url: path } : { banner_url: path };
+      const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
       if (error) throw error;
       toast.success(cropKind === "avatar" ? "Foto actualizada 💕" : "Banner actualizado ✨");
       setCropSrc(null);
