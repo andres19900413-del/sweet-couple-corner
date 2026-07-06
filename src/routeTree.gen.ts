@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MoodsRouteImport } from './routes/moods'
 import { Route as MemoriesRouteImport } from './routes/memories'
 import { Route as GalleryRouteImport } from './routes/gallery'
@@ -23,6 +24,11 @@ import { Route as ApiPublicHooksSendPushRouteImport } from './routes/api/public/
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MoodsRoute = MoodsRouteImport.update({
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/gallery': typeof GalleryRoute
   '/memories': typeof MemoriesRoute
   '/moods': typeof MoodsRoute
+  '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/api/public/hooks/send-push': typeof ApiPublicHooksSendPushRoute
 }
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/gallery': typeof GalleryRoute
   '/memories': typeof MemoriesRoute
   '/moods': typeof MoodsRoute
+  '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/api/public/hooks/send-push': typeof ApiPublicHooksSendPushRoute
 }
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/gallery': typeof GalleryRoute
   '/memories': typeof MemoriesRoute
   '/moods': typeof MoodsRoute
+  '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/api/public/hooks/send-push': typeof ApiPublicHooksSendPushRoute
 }
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/memories'
     | '/moods'
+    | '/profile'
     | '/settings'
     | '/api/public/hooks/send-push'
   fileRoutesByTo: FileRoutesByTo
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/memories'
     | '/moods'
+    | '/profile'
     | '/settings'
     | '/api/public/hooks/send-push'
   id:
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/memories'
     | '/moods'
+    | '/profile'
     | '/settings'
     | '/api/public/hooks/send-push'
   fileRoutesById: FileRoutesById
@@ -156,6 +168,7 @@ export interface RootRouteChildren {
   GalleryRoute: typeof GalleryRoute
   MemoriesRoute: typeof MemoriesRoute
   MoodsRoute: typeof MoodsRoute
+  ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
   ApiPublicHooksSendPushRoute: typeof ApiPublicHooksSendPushRoute
 }
@@ -167,6 +180,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/moods': {
@@ -244,6 +264,7 @@ const rootRouteChildren: RootRouteChildren = {
   GalleryRoute: GalleryRoute,
   MemoriesRoute: MemoriesRoute,
   MoodsRoute: MoodsRoute,
+  ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
   ApiPublicHooksSendPushRoute: ApiPublicHooksSendPushRoute,
 }
