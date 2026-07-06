@@ -10,9 +10,11 @@ import {
   NotebookPen,
   Settings,
   Smile,
+  ChevronRight,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useProfile } from "@/hooks/use-profile";
 
 const items = [
   { to: "/", label: "Inicio", Icon: Heart, badge: null },
@@ -28,7 +30,9 @@ const items = [
 export function MenuDrawer() {
   const [open, setOpen] = useState(false);
   const { unread } = useNotifications();
+  const { profile, avatarSrc, bannerSrc } = useProfile();
   const totalUnread = (unread.chat ?? 0) + (unread.memories ?? 0);
+  const name = profile?.display_name || "Mi perfil";
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -46,11 +50,44 @@ export function MenuDrawer() {
           )}
         </button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-72 p-0">
-        <SheetHeader className="border-b border-border/60 px-6 py-5 text-left">
-          <SheetTitle className="text-lg">Menú</SheetTitle>
+      <SheetContent side="left" className="w-72 overflow-y-auto p-0">
+        <SheetHeader className="sr-only">
+          <SheetTitle>Menú</SheetTitle>
         </SheetHeader>
-        <nav className="p-3">
+
+        <Link
+          to="/profile"
+          onClick={() => setOpen(false)}
+          className="group block"
+          aria-label="Ir a mi perfil"
+        >
+          <div
+            className="relative h-32 w-full bg-gradient-to-br from-primary/50 to-accent/50 bg-cover bg-center"
+            style={bannerSrc ? { backgroundImage: `url(${bannerSrc})` } : undefined}
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+            <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur">
+              Editar <ChevronRight className="h-3 w-3" />
+            </span>
+          </div>
+          <div className="-mt-10 flex flex-col items-center px-4 pb-4">
+            <div className="h-20 w-20 overflow-hidden rounded-full border-4 border-card bg-muted shadow-lg">
+              {avatarSrc ? (
+                <img src={avatarSrc} alt={name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-2xl">
+                  {profile?.avatar_emoji || "🧸"}
+                </div>
+              )}
+            </div>
+            <p className="mt-2 font-display text-base text-foreground group-hover:text-primary">
+              {name}
+            </p>
+            <p className="text-[11px] text-muted-foreground">Ver mi perfil</p>
+          </div>
+        </Link>
+
+        <nav className="border-t border-border/60 p-3">
           <ul className="flex flex-col gap-1">
             {items.map(({ to, label, Icon, badge }) => {
               const count = badge ? unread[badge] : 0;
