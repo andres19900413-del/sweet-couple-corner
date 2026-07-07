@@ -47,6 +47,42 @@ export type Database = {
         }
         Relationships: []
       }
+      letters: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          opened_at: string | null
+          recipient_id: string | null
+          title: string
+          unlock_at: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          opened_at?: string | null
+          recipient_id?: string | null
+          title: string
+          unlock_at: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          opened_at?: string | null
+          recipient_id?: string | null
+          title?: string
+          unlock_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           audio_url: string | null
@@ -181,24 +217,33 @@ export type Database = {
           avatar_url: string | null
           banner_url: string | null
           created_at: string
+          current_streak: number
           display_name: string | null
           id: string
+          last_visit_date: string | null
+          longest_streak: number
         }
         Insert: {
           avatar_emoji?: string | null
           avatar_url?: string | null
           banner_url?: string | null
           created_at?: string
+          current_streak?: number
           display_name?: string | null
           id: string
+          last_visit_date?: string | null
+          longest_streak?: number
         }
         Update: {
           avatar_emoji?: string | null
           avatar_url?: string | null
           banner_url?: string | null
           created_at?: string
+          current_streak?: number
           display_name?: string | null
           id?: string
+          last_visit_date?: string | null
+          longest_streak?: number
         }
         Relationships: []
       }
@@ -267,6 +312,14 @@ export type Database = {
           _url: string
         }
         Returns: undefined
+      }
+      touch_streak: {
+        Args: never
+        Returns: {
+          current_streak: number
+          last_visit_date: string
+          longest_streak: number
+        }[]
       }
     }
     Enums: {
