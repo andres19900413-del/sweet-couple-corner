@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Heart } from "lucide-react";
+import { Flame, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ThinkingOfYou } from "@/components/ThinkingOfYou";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePreferences } from "@/lib/preferences";
+import { useStreak } from "@/hooks/use-streak";
 import { STORAGE_KEYS, daysBetween, useLocalStorage } from "@/lib/storage";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
