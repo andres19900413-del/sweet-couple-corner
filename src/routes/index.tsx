@@ -1,12 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Heart } from "lucide-react";
+import { Flame, Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ThinkingOfYou } from "@/components/ThinkingOfYou";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePreferences } from "@/lib/preferences";
+import { useStreak } from "@/hooks/use-streak";
 import { STORAGE_KEYS, daysBetween, useLocalStorage } from "@/lib/storage";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -24,8 +26,10 @@ function HomePage() {
     null,
   );
   const { prefs } = usePreferences();
+  const { streak } = useStreak();
   const [draft, setDraft] = useState("");
   const [now, setNow] = useState(() => new Date());
+
 
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000 * 30);
@@ -87,6 +91,18 @@ function HomePage() {
           {months > 0 && `${months} mes${months > 1 ? "es" : ""}, `}
           {remDays} día{remDays === 1 ? "" : "s"}
         </p>
+
+        {streak.current > 0 && (
+          <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-orange-400/40 bg-orange-500/10 px-4 py-2 text-sm font-medium text-orange-500 shadow-soft">
+            <Flame className="h-4 w-4 fill-current" />
+            Racha de {streak.current} día{streak.current === 1 ? "" : "s"}
+            {streak.longest > streak.current && (
+              <span className="text-xs text-muted-foreground">· récord {streak.longest}</span>
+            )}
+          </div>
+        )}
+
+
 
         <div className="mt-10 w-full rounded-3xl border border-border/60 bg-card/70 p-5 backdrop-blur shadow-soft">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">

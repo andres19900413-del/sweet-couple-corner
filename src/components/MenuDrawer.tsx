@@ -5,6 +5,7 @@ import {
   Heart,
   Images,
   ListChecks,
+  Mail,
   Menu,
   MessageCircleHeart,
   NotebookPen,
@@ -23,9 +24,11 @@ const items = [
   { to: "/gallery", label: "Fotos", Icon: Images, badge: null },
   { to: "/calendar", label: "Fechas", Icon: CalendarDays, badge: null },
   { to: "/bucket", label: "Planes", Icon: ListChecks, badge: null },
+  { to: "/letters", label: "Cartas", Icon: Mail, badge: null },
   { to: "/memories", label: "Notas", Icon: NotebookPen, badge: "memories" as const },
   { to: "/settings", label: "Ajustes", Icon: Settings, badge: null },
 ] as const;
+
 
 export function MenuDrawer() {
   const [open, setOpen] = useState(false);
