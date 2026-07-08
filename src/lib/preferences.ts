@@ -2,12 +2,18 @@ import { useEffect, useState } from "react";
 
 export type ThemeKey = "blush" | "lavender" | "peach" | "mint" | "sky";
 
-export const THEMES: { key: ThemeKey; label: string; swatch: string[] }[] = [
-  { key: "blush", label: "Rosa", swatch: ["#f8d7e0", "#e8c5d0", "#c98aa6"] },
-  { key: "lavender", label: "Lavanda", swatch: ["#e8dcf2", "#c9a0dc", "#9b72cf"] },
-  { key: "peach", label: "Melocotón", swatch: ["#fde2cf", "#f8c5a0", "#e89770"] },
-  { key: "mint", label: "Menta", swatch: ["#d6f0e0", "#a8d8c0", "#6db89a"] },
-  { key: "sky", label: "Cielo", swatch: ["#d8e6f5", "#a8c5e8", "#6b8fc4"] },
+export const THEMES: {
+  key: ThemeKey;
+  label: string;
+  swatch: string[];
+  unlockAt: number;
+  hint: string;
+}[] = [
+  { key: "blush", label: "Rosa", swatch: ["#f8d7e0", "#e8c5d0", "#c98aa6"], unlockAt: 0, hint: "Siempre disponible" },
+  { key: "peach", label: "Melocotón", swatch: ["#fde2cf", "#f8c5a0", "#e89770"], unlockAt: 3, hint: "Racha de 3 días" },
+  { key: "mint", label: "Menta", swatch: ["#d6f0e0", "#a8d8c0", "#6db89a"], unlockAt: 7, hint: "Racha de 7 días" },
+  { key: "lavender", label: "Lavanda", swatch: ["#e8dcf2", "#c9a0dc", "#9b72cf"], unlockAt: 14, hint: "Racha de 14 días" },
+  { key: "sky", label: "Cielo", swatch: ["#d8e6f5", "#a8c5e8", "#6b8fc4"], unlockAt: 30, hint: "Racha de 30 días" },
 ];
 
 export type CustomColors = {

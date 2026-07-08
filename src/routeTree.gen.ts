@@ -14,6 +14,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MoodsRouteImport } from './routes/moods'
 import { Route as MemoriesRouteImport } from './routes/memories'
 import { Route as LettersRouteImport } from './routes/letters'
+import { Route as GiftsRouteImport } from './routes/gifts'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CalendarRouteImport } from './routes/calendar'
@@ -45,6 +46,11 @@ const MemoriesRoute = MemoriesRouteImport.update({
 const LettersRoute = LettersRouteImport.update({
   id: '/letters',
   path: '/letters',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GiftsRoute = GiftsRouteImport.update({
+  id: '/gifts',
+  path: '/gifts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GalleryRoute = GalleryRouteImport.update({
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
   '/gallery': typeof GalleryRoute
+  '/gifts': typeof GiftsRoute
   '/letters': typeof LettersRoute
   '/memories': typeof MemoriesRoute
   '/moods': typeof MoodsRoute
@@ -104,6 +111,7 @@ export interface FileRoutesByTo {
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
   '/gallery': typeof GalleryRoute
+  '/gifts': typeof GiftsRoute
   '/letters': typeof LettersRoute
   '/memories': typeof MemoriesRoute
   '/moods': typeof MoodsRoute
@@ -119,6 +127,7 @@ export interface FileRoutesById {
   '/calendar': typeof CalendarRoute
   '/chat': typeof ChatRoute
   '/gallery': typeof GalleryRoute
+  '/gifts': typeof GiftsRoute
   '/letters': typeof LettersRoute
   '/memories': typeof MemoriesRoute
   '/moods': typeof MoodsRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/chat'
     | '/gallery'
+    | '/gifts'
     | '/letters'
     | '/memories'
     | '/moods'
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/chat'
     | '/gallery'
+    | '/gifts'
     | '/letters'
     | '/memories'
     | '/moods'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/calendar'
     | '/chat'
     | '/gallery'
+    | '/gifts'
     | '/letters'
     | '/memories'
     | '/moods'
@@ -178,6 +190,7 @@ export interface RootRouteChildren {
   CalendarRoute: typeof CalendarRoute
   ChatRoute: typeof ChatRoute
   GalleryRoute: typeof GalleryRoute
+  GiftsRoute: typeof GiftsRoute
   LettersRoute: typeof LettersRoute
   MemoriesRoute: typeof MemoriesRoute
   MoodsRoute: typeof MoodsRoute
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/letters'
       fullPath: '/letters'
       preLoaderRoute: typeof LettersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gifts': {
+      id: '/gifts'
+      path: '/gifts'
+      fullPath: '/gifts'
+      preLoaderRoute: typeof GiftsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gallery': {
@@ -282,6 +302,7 @@ const rootRouteChildren: RootRouteChildren = {
   CalendarRoute: CalendarRoute,
   ChatRoute: ChatRoute,
   GalleryRoute: GalleryRoute,
+  GiftsRoute: GiftsRoute,
   LettersRoute: LettersRoute,
   MemoriesRoute: MemoriesRoute,
   MoodsRoute: MoodsRoute,
