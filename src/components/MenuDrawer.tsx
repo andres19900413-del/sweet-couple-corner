@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   CalendarDays,
+  Gift,
   Heart,
   Images,
   ListChecks,
@@ -21,6 +22,7 @@ const items = [
   { to: "/", label: "Inicio", Icon: Heart, badge: null },
   { to: "/moods", label: "Ánimo", Icon: Smile, badge: null },
   { to: "/chat", label: "Chat", Icon: MessageCircleHeart, badge: "chat" as const },
+  { to: "/gifts", label: "Regalos", Icon: Gift, badge: null },
   { to: "/gallery", label: "Fotos", Icon: Images, badge: null },
   { to: "/calendar", label: "Fechas", Icon: CalendarDays, badge: null },
   { to: "/bucket", label: "Planes", Icon: ListChecks, badge: null },

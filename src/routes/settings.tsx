@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Download, LogOut, Upload } from "lucide-react";
+import { Check, Download, Flame, Lock, LogOut, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
+import { useStreak } from "@/hooks/use-streak";
 import { DEFAULT_CUSTOM_COLORS, THEMES, usePreferences } from "@/lib/preferences";
 import { STORAGE_KEYS, exportAll, importAll, useLocalStorage } from "@/lib/storage";
 import { PushToggle } from "@/components/PushToggle";
+import { toast } from "sonner";
 
 const EMOJIS = ["💕", "💖", "💘", "💞", "❤️", "🌸", "🌷", "✨", "🦋", "🧸"];
 
@@ -26,6 +28,8 @@ export const Route = createFileRoute("/settings")({
 function SettingsPage() {
   const { user, signOut } = useAuth();
   const { prefs, update } = usePreferences();
+  const { streak } = useStreak();
+  const unlockRef = Math.max(streak.current, streak.longest);
   const [startDate, setStartDate] = useLocalStorage<string | null>(
     STORAGE_KEYS.startDate,
     null,
@@ -141,23 +145,35 @@ function SettingsPage() {
 
 
       <section className="mb-6 rounded-3xl border border-border/60 bg-card/80 p-5 shadow-soft backdrop-blur">
-        <h2 className="mb-1 font-display text-lg">Paleta pastel</h2>
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <h2 className="font-display text-lg">Paleta pastel</h2>
+          <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/10 px-2 py-0.5 text-[11px] font-semibold text-orange-500">
+            <Flame className="h-3 w-3 fill-current" /> {unlockRef}
+          </span>
+        </div>
         <p className="mb-3 text-sm text-muted-foreground">
-          Elige el tono que más os represente.
+          Desbloquea nuevos temas manteniendo tu racha diaria. ✨
         </p>
         <div className="grid grid-cols-2 gap-2">
           {THEMES.map((t) => {
             const active = prefs.themeKey === t.key;
+            const locked = unlockRef < t.unlockAt;
             return (
               <button
                 key={t.key}
                 type="button"
-                onClick={() => update({ themeKey: t.key })}
-                className={`flex items-center gap-3 rounded-2xl border p-3 text-left transition ${
+                onClick={() => {
+                  if (locked) {
+                    toast(`Necesitas una racha de ${t.unlockAt} días 🔥`);
+                    return;
+                  }
+                  update({ themeKey: t.key });
+                }}
+                className={`relative flex items-center gap-3 rounded-2xl border p-3 text-left transition ${
                   active
                     ? "border-primary bg-primary/10"
                     : "border-border bg-card hover:bg-accent/40"
-                }`}
+                } ${locked ? "opacity-60" : ""}`}
               >
                 <div className="flex -space-x-2">
                   {t.swatch.map((c) => (
@@ -168,8 +184,15 @@ function SettingsPage() {
                     />
                   ))}
                 </div>
-                <span className="flex-1 text-sm font-medium">{t.label}</span>
-                {active && <Check className="h-4 w-4 text-primary" />}
+                <div className="flex flex-1 flex-col">
+                  <span className="text-sm font-medium">{t.label}</span>
+                  <span className="text-[10px] text-muted-foreground">{t.hint}</span>
+                </div>
+                {locked ? (
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                ) : active ? (
+                  <Check className="h-4 w-4 text-primary" />
+                ) : null}
               </button>
             );
           })}
