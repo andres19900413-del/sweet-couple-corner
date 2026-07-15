@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { usePreferences } from "@/lib/preferences";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { compressImage } from "@/lib/image-compress";
 
 export const Route = createFileRoute("/gallery")({
   head: () => ({
@@ -94,11 +95,12 @@ function GalleryPage() {
     }
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
+      const compressed = await compressImage(file);
+      const ext = compressed.name.split(".").pop() || "jpg";
       const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("gallery")
-        .upload(path, file, { contentType: file.type });
+        .upload(path, compressed, { contentType: compressed.type });
       if (upErr) throw upErr;
       const { error: insErr } = await supabase.from("photos").insert({
         uploader_id: user.id,
