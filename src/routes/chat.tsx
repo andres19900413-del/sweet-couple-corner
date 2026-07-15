@@ -113,6 +113,8 @@ function ChatPage() {
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<Blob[]>([]);
   const recordTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isActuallyRecording = useRef(false);
 
   const msgById = useMemo(() => {
     const map: Record<string, Msg> = {};
@@ -224,38 +226,61 @@ function ChatPage() {
     }
   };
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mr = new MediaRecorder(stream);
-      audioChunks.current = [];
-      mr.ondataavailable = (e) => audioChunks.current.push(e.data);
-      mr.onstop = async () => {
-        stream.getTracks().forEach(t => t.stop());
-        const blob = new Blob(audioChunks.current, { type: "audio/webm" });
-        setBusy(true);
-        try {
-          const path = `${user!.id}/audio-${crypto.randomUUID()}.webm`;
-          const { error } = await supabase.storage.from("chat-media").upload(path, blob, { contentType: "audio/webm" });
-          if (error) throw error;
-          await send({ audio_url: path, type: "audio" });
-        } catch {
-          toast.error("Error enviando audio");
-        } finally {
-          setBusy(false);
-        }
-      };
-      mr.start();
-      mediaRecorder.current = mr;
-      setRecording(true);
-      setRecordSecs(0);
-      recordTimer.current = setInterval(() => setRecordSecs(s => s + 1), 1000);
-    } catch {
-      toast.error("No se pudo acceder al micrófono");
-    }
+  // Antes, la grabación arrancaba apenas se tocaba el botón (onPointerDown),
+  // así que cualquier toque rápido o accidental (muy común en móvil, por
+  // ejemplo justo cuando el teclado se está cerrando) disparaba el
+  // micrófono y terminaba en el error "No se pudo acceder al micrófono"
+  // en vez de simplemente no hacer nada. Ahora esperamos ~180ms de
+  // pulsación sostenida antes de considerar que es una grabación real.
+  const PRESS_THRESHOLD_MS = 180;
+
+  const beginPress = () => {
+    if (pressTimer.current) clearTimeout(pressTimer.current);
+    pressTimer.current = setTimeout(async () => {
+      pressTimer.current = null;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mr = new MediaRecorder(stream);
+        audioChunks.current = [];
+        mr.ondataavailable = (e) => audioChunks.current.push(e.data);
+        mr.onstop = async () => {
+          stream.getTracks().forEach((t) => t.stop());
+          const blob = new Blob(audioChunks.current, { type: "audio/webm" });
+          setBusy(true);
+          try {
+            const path = `${user!.id}/audio-${crypto.randomUUID()}.webm`;
+            const { error } = await supabase.storage.from("chat-media").upload(path, blob, { contentType: "audio/webm" });
+            if (error) throw error;
+            await send({ audio_url: path, type: "audio" });
+          } catch {
+            toast.error("Error enviando audio");
+          } finally {
+            setBusy(false);
+          }
+        };
+        mr.start();
+        mediaRecorder.current = mr;
+        isActuallyRecording.current = true;
+        setRecording(true);
+        setRecordSecs(0);
+        recordTimer.current = setInterval(() => setRecordSecs((s) => s + 1), 1000);
+      } catch {
+        toast.error("No se pudo acceder al micrófono");
+      }
+    }, PRESS_THRESHOLD_MS);
   };
 
-  const stopRecording = () => {
+  const endPress = () => {
+    // Si soltó antes de que se cumpliera el umbral, fue un toque rápido
+    // (probablemente sin intención de grabar) — simplemente lo ignoramos,
+    // sin mostrar ningún error ni pedir permiso de micrófono.
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+      return;
+    }
+    if (!isActuallyRecording.current) return;
+    isActuallyRecording.current = false;
     mediaRecorder.current?.stop();
     setRecording(false);
     if (recordTimer.current) clearInterval(recordTimer.current);
@@ -507,8 +532,8 @@ function ChatPage() {
             <Button size="icon" onClick={onSend} aria-label="Enviar"><Send className="h-4 w-4" /></Button>
           ) : (
             <Button size="icon" variant={recording ? "destructive" : "ghost"}
-              onPointerDown={startRecording} onPointerUp={stopRecording} onPointerLeave={stopRecording}
-              aria-label="Grabar voz">
+              onPointerDown={beginPress} onPointerUp={endPress} onPointerLeave={endPress} onPointerCancel={endPress}
+              aria-label="Mantén presionado para grabar voz">
               {recording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             </Button>
           )}
