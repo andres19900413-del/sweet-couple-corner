@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/use-auth";
+import { useKeyboardInset } from "@/hooks/use-keyboard-inset";
 import { supabase } from "@/integrations/supabase/client";
 import { compressImage } from "@/lib/image-compress";
 
@@ -115,6 +116,7 @@ function ChatPage() {
   const recordTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isActuallyRecording = useRef(false);
+  const kbInset = useKeyboardInset();
 
   const msgById = useMemo(() => {
     const map: Record<string, Msg> = {};
@@ -457,7 +459,10 @@ function ChatPage() {
         <div ref={endRef} />
       </div>
 
-      <div className="fixed bottom-16 left-0 right-0 z-30 border-t border-border/60 bg-card/90 backdrop-blur-lg">
+      <div
+  className="fixed left-0 right-0 z-30 border-t border-border/60 bg-card/90 backdrop-blur-lg transition-[bottom] duration-100"
+  style={{ bottom: kbInset > 0 ? kbInset : "4rem" }}
+>
         {replyTo && (
           <div className="mx-auto flex max-w-md items-stretch gap-2 px-3 pt-2">
             <div className="flex flex-1 items-stretch gap-2 rounded-lg bg-primary/10 px-2 py-1.5">
