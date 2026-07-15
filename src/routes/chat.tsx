@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { compressImage } from "@/lib/image-compress";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({ meta: [{ title: "Chat 💌" }] }),
@@ -209,9 +210,10 @@ function ChatPage() {
     if (!user) return;
     setBusy(true);
     try {
-      const ext = file.name.split(".").pop() ?? "jpg";
+      const compressed = await compressImage(file);
+      const ext = compressed.name.split(".").pop() ?? "jpg";
       const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("chat-media").upload(path, file, { contentType: file.type });
+      const { error: upErr } = await supabase.storage.from("chat-media").upload(path, compressed, { contentType: compressed.type });
       if (upErr) throw upErr;
       await send({ image_url: path, type: "image" });
     } catch (err) {
