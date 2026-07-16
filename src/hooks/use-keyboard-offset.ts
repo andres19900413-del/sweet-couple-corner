@@ -21,17 +21,41 @@ export function useKeyboardOffset(): number {
     const vv = window.visualViewport;
     if (!vv) return; // navegadores muy viejos sin soporte: nos quedamos en 0, sin romper nada
 
-    const update = () => {
+    const measure = () => {
       const keyboardHeight = window.innerHeight - vv.height - vv.offsetTop;
-      setOffset(keyboardHeight > 60 ? keyboardHeight : 0); // ignoramos diferencias chiquitas (barras de navegador, etc.)
+      setOffset(keyboardHeight > 60 ? keyboardHeight : 0);
     };
 
-    update();
-    vv.addEventListener("resize", update);
-    vv.addEventListener("scroll", update);
+    // iOS a veces dispara el evento "resize" ANTES de que termine la
+    // animación de apertura del teclado, dando una altura incompleta.
+    // Por eso volvemos a medir varias veces durante ~350ms (lo que dura
+    // la animación) en vez de confiar en una sola lectura.
+    const measureWithRetries = () => {
+      measure();
+      [50, 150, 250, 350].forEach((delay) => setTimeout(measure, delay));
+    };
+
+    measure();
+    vv.addEventListener("resize", measureWithRetries);
+    vv.addEventListener("scroll", measure);
+
+    // Respaldo adicional: en iOS, el foco/desenfoque de un input es una
+    // señal más inmediata y confiable de que el teclado va a abrir o
+    // cerrar que esperar al evento resize del viewport.
+    const onFocusIn = (e: FocusEvent) => {
+      const el = e.target as HTMLElement;
+      if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") measureWithRetries();
+    };
+    const onFocusOut = () => measureWithRetries();
+
+    document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("focusout", onFocusOut);
+
     return () => {
-      vv.removeEventListener("resize", update);
-      vv.removeEventListener("scroll", update);
+      vv.removeEventListener("resize", measureWithRetries);
+      vv.removeEventListener("scroll", measure);
+      document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("focusout", onFocusOut);
     };
   }, []);
 
