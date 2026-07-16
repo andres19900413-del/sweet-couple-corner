@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Heart, Images, MessageCircleHeart, Smile } from "lucide-react";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useKeyboardOffset } from "@/hooks/use-keyboard-offset";
 
 const items = [
   { to: "/", label: "Inicio", Icon: Heart, badge: null },
@@ -11,6 +12,13 @@ const items = [
 
 export function BottomNav() {
   const { unread } = useNotifications();
+  const keyboardOffset = useKeyboardOffset();
+
+  // Con el teclado abierto no hay espacio (ni sentido) para mostrar la
+  // navegación inferior — la escondemos para que no quede flotando en
+  // medio de la pantalla ni tapando el campo de texto.
+  if (keyboardOffset > 0) return null;
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-card/80 backdrop-blur-lg">
       <ul className="mx-auto flex max-w-md items-stretch justify-around px-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-2">
