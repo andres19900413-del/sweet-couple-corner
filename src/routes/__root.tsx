@@ -80,7 +80,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, interactive-widget=resizes-content" },
       { name: "theme-color", content: "#f9d6e0" },
       { title: "Nuestro Rinconcito 💕" },
       { name: "description", content: "Contador de días y nuestro espacio privado." },
