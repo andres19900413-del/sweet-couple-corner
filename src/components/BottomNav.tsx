@@ -10,17 +10,23 @@ const items = [
   { to: "/gallery", label: "Fotos", Icon: Images, badge: null },
 ] as const;
 
-export function BottomNav() {
+export function BottomNav({ variant = "fixed" }: { variant?: "fixed" | "static" }) {
   const { unread } = useNotifications();
   const keyboardOffset = useKeyboardOffset();
 
   // Con el teclado abierto no hay espacio (ni sentido) para mostrar la
-  // navegación inferior — la escondemos para que no quede flotando en
-  // medio de la pantalla ni tapando el campo de texto.
+  // navegación inferior — la escondemos para dejarle todo el espacio
+  // posible a los mensajes.
   if (keyboardOffset > 0) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-card/80 backdrop-blur-lg">
+    <nav
+      className={
+        variant === "fixed"
+          ? "fixed bottom-0 left-0 right-0 z-40 border-t border-border/60 bg-card/80 backdrop-blur-lg"
+          : "shrink-0 border-t border-border/60 bg-card/80 backdrop-blur-lg"
+      }
+    >
       <ul className="mx-auto flex max-w-md items-stretch justify-around px-2 pb-[max(0.4rem,env(safe-area-inset-bottom))] pt-2">
         {items.map(({ to, label, Icon, badge }) => {
           const count = badge ? unread[badge] : 0;
