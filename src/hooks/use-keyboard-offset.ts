@@ -61,3 +61,67 @@ export function useKeyboardOffset(): number {
 
   return offset;
 }
+
+/**
+ * Altura real y utilizable de la pantalla, en píxeles, actualizada en vivo.
+ *
+ * Por qué esto existe y `100dvh` no basta: en iOS Safari, la unidad CSS
+ * `dvh` se actualiza cuando la barra de direcciones de Safari se
+ * esconde/aparece, pero NO se actualiza cuando aparece el teclado — así
+ * que un contenedor en `100dvh` se queda con una altura que todavía
+ * incluye el espacio que ahora ocupa el teclado, y cualquier cosa pegada
+ * a su fondo termina detrás de él. `window.visualViewport.height`, en
+ * cambio, sí baja correctamente cuando el teclado aparece. Este hook
+ * expone ese valor en píxeles para usarlo como altura real del layout
+ * en vez de confiar en `dvh`.
+ */
+export function useAppHeight(): number | null {
+  const [height, setHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+
+    const measure = () => {
+      if (vv) {
+        setHeight(vv.height);
+      } else {
+        setHeight(window.innerHeight);
+      }
+    };
+
+    const measureWithRetries = () => {
+      measure();
+      [50, 150, 250, 350].forEach((delay) => setTimeout(measure, delay));
+    };
+
+    measure();
+
+    if (vv) {
+      vv.addEventListener("resize", measureWithRetries);
+      vv.addEventListener("scroll", measure);
+    } else {
+      window.addEventListener("resize", measureWithRetries);
+    }
+
+    const onFocusIn = (e: FocusEvent) => {
+      const el = e.target as HTMLElement;
+      if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") measureWithRetries();
+    };
+    const onFocusOut = () => measureWithRetries();
+    document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("focusout", onFocusOut);
+
+    return () => {
+      if (vv) {
+        vv.removeEventListener("resize", measureWithRetries);
+        vv.removeEventListener("scroll", measure);
+      } else {
+        window.removeEventListener("resize", measureWithRetries);
+      }
+      document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("focusout", onFocusOut);
+    };
+  }, []);
+
+  return height;
+}
