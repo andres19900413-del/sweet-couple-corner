@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { BottomNav } from "./BottomNav";
 import { MenuDrawer } from "./MenuDrawer";
 import { useApplyTheme } from "@/lib/preferences";
+import { useAppHeight } from "@/hooks/use-keyboard-offset";
 
 export function AppShell({
   children,
@@ -14,19 +15,24 @@ export function AppShell({
   /**
    * Modo especial para pantallas con un campo de texto que el teclado no
    * debe tapar (como el Chat). En vez de usar `position: fixed` (que se
-   * porta mal con el teclado en PWAs instaladas en iOS), usa `100dvh` +
-   * flexbox normal, que el navegador sí sabe encoger correctamente cuando
-   * aparece el teclado.
+   * porta mal con el teclado en PWAs instaladas en iOS), usa la altura
+   * real del viewport (en píxeles, calculada en vivo) + flexbox normal.
+   * No usamos `100dvh` porque en iOS esa unidad no baja cuando aparece
+   * el teclado — solo cuando la barra de Safari se esconde/aparece.
    */
   fitToViewport?: boolean;
   /** Contenido fijo al fondo (ej. la barra de escribir mensaje) cuando fitToViewport está activo. */
   footer?: ReactNode;
 }) {
   useApplyTheme();
+  const appHeight = useAppHeight();
 
   if (fitToViewport) {
     return (
-      <div className="mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pt-8">
+      <div
+        className="mx-auto flex max-w-md flex-col overflow-hidden px-5 pt-8"
+        style={{ height: appHeight ? `${appHeight}px` : "100dvh" }}
+      >
         <MenuDrawer />
         {title ? (
           <header className="mb-3 shrink-0 pl-14">
