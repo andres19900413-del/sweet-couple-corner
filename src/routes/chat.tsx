@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { compressImage } from "@/lib/image-compress";
+import { useKeyboardOffset } from "@/hooks/use-keyboard-offset";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({ meta: [{ title: "Chat 💌" }] }),
@@ -115,6 +116,7 @@ function ChatPage() {
   const recordTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isActuallyRecording = useRef(false);
+  const keyboardOffset = useKeyboardOffset();
 
   const msgById = useMemo(() => {
     const map: Record<string, Msg> = {};
@@ -330,7 +332,10 @@ function ChatPage() {
   };
 
   const inputBar = (
-    <div className="shrink-0 border-t border-border/60 bg-card/90 backdrop-blur-lg">
+    <div
+      className="fixed left-0 right-0 z-30 border-t border-border/60 bg-card/90 backdrop-blur-lg transition-[bottom] duration-100"
+      style={{ bottom: keyboardOffset > 0 ? keyboardOffset : 64 }}
+    >
       {replyTo && (
         <div className="mx-auto flex max-w-md items-stretch gap-2 px-3 pt-2">
           <div className="flex flex-1 items-stretch gap-2 rounded-lg bg-primary/10 px-2 py-1.5">
@@ -415,7 +420,7 @@ function ChatPage() {
   );
 
   return (
-    <AppShell title="Chat" fitToViewport footer={inputBar}>
+    <AppShell title="Chat">
       <div className="flex gap-2 mb-3 px-1">
         <Button size="sm" variant="outline" onClick={() => startCall(false)} className="flex-1 gap-1.5 text-xs">
           <Phone className="h-3.5 w-3.5" /> Llamada de voz
@@ -425,7 +430,7 @@ function ChatPage() {
         </Button>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 pb-32">
         {messages.length === 0 && (
           <p className="rounded-2xl border border-dashed border-border bg-card/40 px-4 py-8 text-center text-sm text-muted-foreground">
             Aún no hay mensajes. Mándale algo bonito 💕
@@ -541,6 +546,8 @@ function ChatPage() {
         })}
         <div ref={endRef} />
       </div>
+
+      {inputBar}
     </AppShell>
   );
 }
